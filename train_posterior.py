@@ -94,7 +94,7 @@ def main(config_path):
 
             loss = torch.nn.MSELoss()(output[:, -1], target[:, :])
             dummy_zero = torch.zeros([cfg['TRAIN']['BATCHSIZE'],
-                                      time_length + 1,
+                                      time_length,
                                       cfg['MODEL']['SIZE']]).float().to(device)
             active_norm = torch.nn.MSELoss()(hidden_list, dummy_zero)
 
