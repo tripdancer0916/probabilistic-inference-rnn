@@ -43,6 +43,8 @@ def main(config_path):
         cfg['MODEL']['ALPHA'] = 0.25
     if 'VARIABLE_TIME_LENGTH' not in cfg['DATALOADER'].keys():
         cfg['DATALOADER']['VARIABLE_TIME_LENGTH'] = 0
+    if 'FIXATION' not in cfg['DATALOADER'].keys():
+        cfg['DATALOADER']['FIXATION'] = 1
 
     model = RecurrentNeuralNetwork(n_in=1, n_out=1, n_hid=cfg['MODEL']['SIZE'], device=device,
                                    alpha_time_scale=cfg['MODEL']['ALPHA'], beta_time_scale=cfg['MODEL']['BETA'],
@@ -93,6 +95,8 @@ def main(config_path):
             hidden_list, output, hidden = model(inputs, hidden, time_length)
 
             loss = torch.nn.MSELoss()(output[:, -1], target[:, :])
+            for j in range(2, cfg['DATALOADER']['FIXATION'] + 1):
+                loss += torch.nn.MSELoss()(output[:, -j], target[:, :])
             dummy_zero = torch.zeros([cfg['TRAIN']['BATCHSIZE'],
                                       time_length,
                                       cfg['MODEL']['SIZE']]).float().to(device)
