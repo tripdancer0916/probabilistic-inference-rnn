@@ -38,7 +38,10 @@ class Sigma(data.Dataset):
         signal_input = np.zeros(self.time_length + self.variable_time_length + 1)
         v = np.random.randint(-self.variable_signal_length, self.variable_signal_length + 1)
         signal_mu = np.random.rand() * (self.mu_max - self.mu_min) + self.mu_min
-        signal_sigma = np.random.rand() * (self.sigma_max - self.sigma_min) + self.sigma_min
+        while True:
+            signal_sigma = np.random.rand() * (self.sigma_max - self.sigma_min) + self.sigma_min
+            if signal_sigma < 0.2 or 0.4 < signal_sigma:
+                break
         signal_length = self.mean_signal_length + v
 
         # signal
