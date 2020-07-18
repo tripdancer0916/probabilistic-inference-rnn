@@ -138,7 +138,7 @@ def main(config_path):
             hidden = hidden.detach()
             hidden_list, output, hidden = model(inputs, hidden)
 
-            fixed_point, result_ok = analyzer.find_fixed_point(hidden_list[0, cfg['DATALOADER']['MEAN_SIGNAL_LENGTH']],
+            fixed_point, result_ok = analyzer.find_fixed_point(hidden_list[0, cfg['DATALOADER']['TIME_LENGTH']],
                                                                view=True)
 
             fixed_point = fixed_point.detach().cpu().numpy()
@@ -147,7 +147,7 @@ def main(config_path):
             fixed_point_tensor = torch.from_numpy(fixed_point).float()
             jacobian = analyzer.calc_jacobian(fixed_point_tensor, cfg['MODEL']['ACTIVATION'])
 
-            print(f'output: {np.dot(model.w_out.weight.detach().cpu().numpy(), fixed_point)}')
+            print(f'output: {np.dot(model.w_out.weight.detach().cpu().numpy(), fixed_point)[0]}')
 
             w, v = np.linalg.eig(jacobian)
             print('# of positive eigenvalues', np.sum(w.real > 0))
