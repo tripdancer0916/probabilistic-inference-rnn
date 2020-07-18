@@ -143,7 +143,7 @@ def main(config_path):
 
             fixed_point = fixed_point.detach().cpu().numpy()
 
-            print(fixed_point)
+            print(fixed_point[:20])
             fixed_point_tensor = torch.from_numpy(fixed_point).float()
             jacobian = analyzer.calc_jacobian(fixed_point_tensor, cfg['MODEL']['ACTIVATION'])
 
