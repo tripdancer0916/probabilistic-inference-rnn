@@ -43,9 +43,9 @@ class FixedPoint(object):
             hidden_activated.requires_grad = True
             speed = self.calc_speed(hidden_activated, self.model.activation)
             if view and i % 5000 == 0:
-                print(f'epoch: {i}, speed={speed.item()}')
+                print(f'epoch: {i}, speed={speed.item():.10f}')
             if speed.item() < self.speed_tor:
-                print(f'epoch: {i}, speed={speed.item()}')
+                print(f'epoch: {i}, speed={speed.item()}.10f')
                 break
             speed.backward()
             if i % self.lr_decay_epoch == 0 and 0 < i:
@@ -65,7 +65,7 @@ class FixedPoint(object):
         if activation == 'tanh':
             tanh_dash = 1 - np.tanh(fixed_point) ** 2
 
-            w_hh = self.model.w_hh.weight.data.numpy()
+            w_hh = self.model.w_hh.weight.data.cpu().numpy()
             jacobian = np.zeros((self.model.n_hid, self.model.n_hid))
             for i in range(self.model.n_hid):
                 for j in range(self.model.n_hid):
@@ -75,7 +75,7 @@ class FixedPoint(object):
 
         elif activation == 'relu':
             relu_dash = np.array([1 if x >= 0 else 0 for x in fixed_point])
-            w_hh = self.model.w_hh.weight.data.numpy()
+            w_hh = self.model.w_hh.weight.data.cpu().numpy()
             jacobian = np.zeros((self.model.n_hid, self.model.n_hid))
             for i in range(self.model.n_hid):
                 for j in range(self.model.n_hid):

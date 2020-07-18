@@ -150,7 +150,7 @@ def main(config_path):
             print(f'output: {np.dot(model.w_out.weight.detach().cpu().numpy(), fixed_point)}')
 
             w, v = np.linalg.eig(jacobian)
-            print('max eigenvalue', np.max(w.real))
+            print('# of positive eigenvalues', np.sum(w.real > 0))
 
             np.savetxt(os.path.join(save_path, f'fixed_point_{count:04d}.txt'), fixed_point)
             count += 1
