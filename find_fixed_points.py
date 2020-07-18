@@ -126,10 +126,11 @@ def main(config_path):
     for trial in range(5):
         for i, data in enumerate(eval_dataloader):
             inputs, target, signal_mu, signal_sigma, mu_posterior = data
-            print(f'signal_mu: {signal_mu}')
-            print(f'signal_sigma: {signal_sigma}')
-            print(f'mu_posterior: {mu_posterior}')
+            print(f'signal_mu: {signal_mu[0].item():.3f}')
+            print(f'signal_sigma: {signal_sigma[0].item():.3f}')
+            print(f'mu_posterior: {mu_posterior[0].item():.3f}')
             inputs, target = inputs.float(), target.long()
+            print(inputs.shape)
             inputs, target = Variable(inputs).to(device), Variable(target).to(device)
 
             hidden = torch.zeros(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE'])
