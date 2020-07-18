@@ -133,7 +133,7 @@ def main(config_path):
             print(inputs.shape)
             inputs, target = Variable(inputs).to(device), Variable(target).to(device)
 
-            hidden = torch.zeros(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE'])
+            hidden = torch.zeros(1, cfg['MODEL']['SIZE'])
             hidden = hidden.to(device)
 
             hidden = hidden.detach()
