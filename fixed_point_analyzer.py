@@ -15,7 +15,7 @@ class FixedPoint(object):
         self.speed_tor = speed_tor
         self.max_epochs = max_epochs
         self.lr_decay_epoch = lr_decay_epoch
-        self.alpha = torch.ones(256) * alpha
+        self.alpha = torch.ones(model.n_hid) * alpha
         self.alpha = self.alpha.to(device)
         self.model.eval()
 
@@ -73,7 +73,7 @@ class FixedPoint(object):
                     if i == j:
                         jacobian[i, j] -= 1
 
-        elif activation =='relu':
+        elif activation == 'relu':
             relu_dash = np.array([1 if x >= 0 else 0 for x in fixed_point])
             w_hh = self.model.w_hh.weight.data.numpy()
             jacobian = np.zeros((self.model.n_hid, self.model.n_hid))
