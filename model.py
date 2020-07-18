@@ -49,9 +49,8 @@ class RecurrentNeuralNetwork(nn.Module):
             outer_product[i, :, :] = torch.ger(firing_rate[i], firing_rate[i])
         return outer_product + torch.randn_like(synapse).to(self.device) * self.sigma_syn * torch.sqrt(beta)
 
-    def forward(self, input_signal, hidden):
+    def forward(self, input_signal, hidden, length):
         num_batch = input_signal.size(0)
-        length = input_signal.size(1)
         hidden_list = torch.zeros(length, num_batch, self.n_hid).type_as(input_signal.data)
         output_list = torch.zeros(length, num_batch, self.n_out).type_as(input_signal.data)
 

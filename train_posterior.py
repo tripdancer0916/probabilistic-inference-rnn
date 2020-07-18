@@ -41,6 +41,8 @@ def main(config_path):
 
     if 'ALPHA' not in cfg['MODEL'].keys():
         cfg['MODEL']['ALPHA'] = 0.25
+    if 'VARIABLE_TIME_LENGTH' not in cfg['DATALOADER'].keys():
+        cfg['DATALOADER']['VARIABLE_TIME_LENGTH'] = 0
 
     model = RecurrentNeuralNetwork(n_in=1, n_out=1, n_hid=cfg['MODEL']['SIZE'], device=device,
                                    alpha_time_scale=cfg['MODEL']['ALPHA'], beta_time_scale=cfg['MODEL']['BETA'],
@@ -59,7 +61,8 @@ def main(config_path):
                               mean_signal_length=cfg['DATALOADER']['MEAN_SIGNAL_LENGTH'],
                               variable_signal_length=cfg['DATALOADER']['VARIABLE_SIGNAL_LENGTH'],
                               mu_prior=cfg['MODEL']['MU_PRIOR'],
-                              sigma_prior=cfg['MODEL']['SIGMA_PRIOR'])
+                              sigma_prior=cfg['MODEL']['SIGMA_PRIOR'],
+                              variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'])
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg['TRAIN']['BATCHSIZE'],
                                                    num_workers=2, shuffle=True,
@@ -84,7 +87,10 @@ def main(config_path):
 
             optimizer.zero_grad()
             hidden = hidden.detach()
-            hidden_list, output, hidden = model(inputs, hidden)
+            variable_length = np.random.randint(-cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
+                                                cfg['DATALOADER']['VARIABLE_TIME_LENGTH'] + 1)
+            time_length = cfg['DATALOADER']['TIME_LENGTH'] + variable_length
+            hidden_list, output, hidden = model(inputs, hidden, time_length)
 
             loss = torch.nn.MSELoss()(output[:, -1], target[:, :])
             dummy_zero = torch.zeros([cfg['TRAIN']['BATCHSIZE'],

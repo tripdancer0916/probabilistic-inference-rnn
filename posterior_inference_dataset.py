@@ -15,6 +15,7 @@ class Posterior(data.Dataset):
             sigma_max,
             mean_signal_length,
             variable_signal_length,
+            variable_time_length,
             mu_prior,
             sigma_prior):
         self.time_length = time_length
@@ -25,6 +26,7 @@ class Posterior(data.Dataset):
         self.sigma_max = sigma_max
         self.mean_signal_length = mean_signal_length
         self.variable_signal_length = variable_signal_length
+        self.variable_time_length = variable_time_length
         self.mu_prior = mu_prior
         self.sigma_prior = sigma_prior
 
@@ -33,7 +35,7 @@ class Posterior(data.Dataset):
 
     def __getitem__(self, item):
         # input signal
-        signal_input = np.zeros(self.time_length + 1)
+        signal_input = np.zeros(self.time_length + self.variable_time_length + 1)
         v = np.random.randint(-self.variable_signal_length, self.variable_signal_length + 1)
         signal_mu = np.random.rand() * (self.mu_max - self.mu_min) + self.mu_min
         signal_sigma = np.random.rand() * (self.sigma_max - self.sigma_min) + self.sigma_min
