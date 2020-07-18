@@ -130,14 +130,13 @@ def main(config_path):
             print(f'signal_sigma: {signal_sigma[0].item():.3f}')
             print(f'mu_posterior: {mu_posterior[0].item():.3f}')
             inputs, target = inputs.float(), target.long()
-            print(inputs.shape)
             inputs, target = Variable(inputs).to(device), Variable(target).to(device)
 
             hidden = torch.zeros(1, cfg['MODEL']['SIZE'])
             hidden = hidden.to(device)
 
             hidden = hidden.detach()
-            hidden_list, output, hidden, _ = model(inputs, hidden)
+            hidden_list, output, hidden = model(inputs, hidden)
 
             fixed_point, result_ok = analyzer.find_fixed_point(hidden_list[0, cfg['DATALOADER']['MEAN_SIGNAL_LENGTH']],
                                                                view=True)
