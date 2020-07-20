@@ -83,7 +83,8 @@ def main(config_path):
             inputs, target = inputs.float(), target.float()
             inputs, target = Variable(inputs).to(device), Variable(target).to(device)
 
-            hidden_np = np.random.normal(0, 0.5, size=(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
+            # hidden_np = np.random.normal(0, 0.5, size=(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
+            hidden_np = np.zeros((cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
             hidden = torch.from_numpy(hidden_np).float()
             hidden = hidden.to(device)
 
