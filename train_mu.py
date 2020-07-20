@@ -47,12 +47,15 @@ def main(config_path):
         cfg['DATALOADER']['FIXATION'] = 1
     if 'RANDOM_START' not in cfg['TRAIN'].keys():
         cfg['TRAIN']['RANDOM_START'] = True
+    if 'INITIAL_STD' not in cfg['MODEL'].keys():
+        cfg['MODEL']['INITIAL_STD'] = 1 / np.sqrt(cfg['MODEL']['SIZE'])
 
     model = RecurrentNeuralNetwork(n_in=1, n_out=1, n_hid=cfg['MODEL']['SIZE'], device=device,
                                    alpha_time_scale=cfg['MODEL']['ALPHA'], beta_time_scale=cfg['MODEL']['BETA'],
                                    activation=cfg['MODEL']['ACTIVATION'],
                                    sigma_neu=cfg['MODEL']['SIGMA_NEU'],
                                    sigma_syn=cfg['MODEL']['SIGMA_SYN'],
+                                   jij_std=cfg['MODEL']['INITIAL_STD'],
                                    use_bias=cfg['MODEL']['USE_BIAS'],
                                    anti_hebbian=cfg['MODEL']['ANTI_HEBB']).to(device)
 

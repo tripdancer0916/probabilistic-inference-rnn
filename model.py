@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 class RecurrentNeuralNetwork(nn.Module):
     def __init__(self, n_in, n_out, n_hid, device,
-                 alpha_time_scale=0.25, beta_time_scale=0.1, activation='tanh', sigma_neu=0.05, sigma_syn=0.002,
+                 alpha_time_scale=0.25, beta_time_scale=0.1, jij_std=0.045, activation='tanh', sigma_neu=0.05, sigma_syn=0.002,
                  use_bias=True, anti_hebbian=True):
         super(RecurrentNeuralNetwork, self).__init__()
         self.n_in = n_in
@@ -15,6 +15,7 @@ class RecurrentNeuralNetwork(nn.Module):
         self.n_out = n_out
         self.w_in = nn.Linear(n_in, n_hid, bias=False)
         self.w_hh = nn.Linear(n_hid, n_hid, bias=use_bias)
+        nn.init.uniform_(self.w_hh.weight, -jij_std, jij_std)
         self.w_out = nn.Linear(n_hid, n_out, bias=False)
 
         self.activation = activation
