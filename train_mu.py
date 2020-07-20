@@ -45,6 +45,8 @@ def main(config_path):
         cfg['DATALOADER']['VARIABLE_TIME_LENGTH'] = 0
     if 'FIXATION' not in cfg['DATALOADER'].keys():
         cfg['DATALOADER']['FIXATION'] = 1
+    if 'RANDOM_START' not in cfg['TRAIN'].keys():
+        cfg['TRAIN']['RANDOM_START'] = True
 
     model = RecurrentNeuralNetwork(n_in=1, n_out=1, n_hid=cfg['MODEL']['SIZE'], device=device,
                                    alpha_time_scale=cfg['MODEL']['ALPHA'], beta_time_scale=cfg['MODEL']['BETA'],
@@ -83,8 +85,10 @@ def main(config_path):
             inputs, target = inputs.float(), target.float()
             inputs, target = Variable(inputs).to(device), Variable(target).to(device)
 
-            # hidden_np = np.random.normal(0, 0.5, size=(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
-            hidden_np = np.zeros((cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
+            if cfg['TRAIN']['RANDOM_START']:
+                hidden_np = np.random.normal(0, 0.5, size=(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
+            else:
+                hidden_np = np.zeros((cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
             hidden = torch.from_numpy(hidden_np).float()
             hidden = hidden.to(device)
 
