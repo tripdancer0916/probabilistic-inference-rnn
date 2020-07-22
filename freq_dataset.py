@@ -40,7 +40,7 @@ class Freq(data.Dataset):
         t = np.arange(0, signal_length * self.time_scale, self.time_scale)
         if len(t) != signal_length:
             t = t[:-1]
-        phase_shift = np.random.rand() * np.pi * self.phase_shift
+        phase_shift = (np.random.rand() * 2 - 1) * np.pi * self.phase_shift
 
         signal = np.sin(signal_freq * t + phase_shift) + np.random.normal(0, self.sigma, signal_length)
         signal_input[: signal_length] = signal
