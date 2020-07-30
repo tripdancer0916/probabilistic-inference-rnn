@@ -72,7 +72,7 @@ def main(config_path):
                                    mean_signal_length=cfg['DATALOADER']['MEAN_SIGNAL_LENGTH'],
                                    variable_signal_length=cfg['DATALOADER']['VARIABLE_SIGNAL_LENGTH'],
                                    variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
-                                   condition='restricted_gains')
+                                   condition='all_gains')
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg['TRAIN']['BATCHSIZE'],
                                                    num_workers=2, shuffle=True,
