@@ -14,7 +14,7 @@ sys.path.append('../')
 
 from torch.autograd import Variable
 
-from posterior_inference_dataset import Posterior
+from sigma_dataset import Sigma
 from model import RecurrentNeuralNetwork
 
 
@@ -27,8 +27,8 @@ def main(config_path):
 
     # save path
     os.makedirs('trained_model', exist_ok=True)
-    os.makedirs('trained_model/posterior', exist_ok=True)
-    save_path = f'trained_model/posterior/{model_name}'
+    os.makedirs('trained_model/sigma', exist_ok=True)
+    save_path = f'trained_model/sigma/{model_name}'
     os.makedirs(save_path, exist_ok=True)
 
     # copy config file
@@ -43,10 +43,6 @@ def main(config_path):
         cfg['MODEL']['ALPHA'] = 0.25
     if 'VARIABLE_TIME_LENGTH' not in cfg['DATALOADER'].keys():
         cfg['DATALOADER']['VARIABLE_TIME_LENGTH'] = 0
-    if 'FIXATION' not in cfg['DATALOADER'].keys():
-        cfg['DATALOADER']['FIXATION'] = 1
-    if 'RANDOM_START' not in cfg['TRAIN'].keys():
-        cfg['TRAIN']['RANDOM_START'] = True
 
     model = RecurrentNeuralNetwork(n_in=1, n_out=1, n_hid=cfg['MODEL']['SIZE'], device=device,
                                    alpha_time_scale=cfg['MODEL']['ALPHA'], beta_time_scale=cfg['MODEL']['BETA'],
@@ -56,17 +52,17 @@ def main(config_path):
                                    use_bias=cfg['MODEL']['USE_BIAS'],
                                    anti_hebbian=cfg['MODEL']['ANTI_HEBB']).to(device)
 
-    train_dataset = Posterior(time_length=cfg['DATALOADER']['TIME_LENGTH'],
-                              time_scale=cfg['MODEL']['ALPHA'],
-                              mu_min=cfg['DATALOADER']['MU_MIN'],
-                              mu_max=cfg['DATALOADER']['MU_MAX'],
-                              sigma_min=cfg['DATALOADER']['SIGMA_MIN'],
-                              sigma_max=cfg['DATALOADER']['SIGMA_MAX'],
-                              mean_signal_length=cfg['DATALOADER']['MEAN_SIGNAL_LENGTH'],
-                              variable_signal_length=cfg['DATALOADER']['VARIABLE_SIGNAL_LENGTH'],
-                              mu_prior=cfg['MODEL']['MU_PRIOR'],
-                              sigma_prior=cfg['MODEL']['SIGMA_PRIOR'],
-                              variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'])
+    train_dataset = Sigma(time_length=cfg['DATALOADER']['TIME_LENGTH'],
+                          time_scale=cfg['MODEL']['ALPHA'],
+                          mu_min=cfg['DATALOADER']['MU_MIN'],
+                          mu_max=cfg['DATALOADER']['MU_MAX'],
+                          sigma_min=cfg['DATALOADER']['SIGMA_MIN'],
+                          sigma_max=cfg['DATALOADER']['SIGMA_MAX'],
+                          mean_signal_length=cfg['DATALOADER']['MEAN_SIGNAL_LENGTH'],
+                          variable_signal_length=cfg['DATALOADER']['VARIABLE_SIGNAL_LENGTH'],
+                          mu_prior=cfg['MODEL']['MU_PRIOR'],
+                          sigma_prior=cfg['MODEL']['SIGMA_PRIOR'],
+                          variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'])
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg['TRAIN']['BATCHSIZE'],
                                                    num_workers=2, shuffle=True,
@@ -85,10 +81,7 @@ def main(config_path):
             inputs, target = inputs.float(), target.float()
             inputs, target = Variable(inputs).to(device), Variable(target).to(device)
 
-            if cfg['TRAIN']['RANDOM_START']:
-                hidden_np = np.random.normal(0, 0.5, size=(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
-            else:
-                hidden_np = np.zeros((cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
+            hidden_np = np.random.normal(0, 0.5, size=(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
             hidden = torch.from_numpy(hidden_np).float()
             hidden = hidden.to(device)
 
@@ -100,8 +93,6 @@ def main(config_path):
             hidden_list, output, hidden = model(inputs, hidden, time_length)
 
             loss = torch.nn.MSELoss()(output[:, -1], target[:, :])
-            for j in range(2, cfg['DATALOADER']['FIXATION'] + 1):
-                loss += torch.nn.MSELoss()(output[:, -j], target[:, :])
             dummy_zero = torch.zeros([cfg['TRAIN']['BATCHSIZE'],
                                       time_length,
                                       cfg['MODEL']['SIZE']]).float().to(device)

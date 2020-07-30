@@ -14,7 +14,7 @@ sys.path.append('../')
 
 from torch.autograd import Variable
 
-from posterior_inference_dataset import Posterior
+from freq_dataset import Freq
 from model import RecurrentNeuralNetwork
 
 
@@ -27,8 +27,8 @@ def main(config_path):
 
     # save path
     os.makedirs('trained_model', exist_ok=True)
-    os.makedirs('trained_model/posterior', exist_ok=True)
-    save_path = f'trained_model/posterior/{model_name}'
+    os.makedirs('trained_model/freq', exist_ok=True)
+    save_path = f'trained_model/freq/{model_name}'
     os.makedirs(save_path, exist_ok=True)
 
     # copy config file
@@ -47,26 +47,27 @@ def main(config_path):
         cfg['DATALOADER']['FIXATION'] = 1
     if 'RANDOM_START' not in cfg['TRAIN'].keys():
         cfg['TRAIN']['RANDOM_START'] = True
+    if 'INITIAL_STD' not in cfg['MODEL'].keys():
+        cfg['MODEL']['INITIAL_STD'] = 1 / np.sqrt(cfg['MODEL']['SIZE'])
 
     model = RecurrentNeuralNetwork(n_in=1, n_out=1, n_hid=cfg['MODEL']['SIZE'], device=device,
                                    alpha_time_scale=cfg['MODEL']['ALPHA'], beta_time_scale=cfg['MODEL']['BETA'],
                                    activation=cfg['MODEL']['ACTIVATION'],
                                    sigma_neu=cfg['MODEL']['SIGMA_NEU'],
                                    sigma_syn=cfg['MODEL']['SIGMA_SYN'],
+                                   jij_std=cfg['MODEL']['INITIAL_STD'],
                                    use_bias=cfg['MODEL']['USE_BIAS'],
                                    anti_hebbian=cfg['MODEL']['ANTI_HEBB']).to(device)
 
-    train_dataset = Posterior(time_length=cfg['DATALOADER']['TIME_LENGTH'],
-                              time_scale=cfg['MODEL']['ALPHA'],
-                              mu_min=cfg['DATALOADER']['MU_MIN'],
-                              mu_max=cfg['DATALOADER']['MU_MAX'],
-                              sigma_min=cfg['DATALOADER']['SIGMA_MIN'],
-                              sigma_max=cfg['DATALOADER']['SIGMA_MAX'],
-                              mean_signal_length=cfg['DATALOADER']['MEAN_SIGNAL_LENGTH'],
-                              variable_signal_length=cfg['DATALOADER']['VARIABLE_SIGNAL_LENGTH'],
-                              mu_prior=cfg['MODEL']['MU_PRIOR'],
-                              sigma_prior=cfg['MODEL']['SIGMA_PRIOR'],
-                              variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'])
+    train_dataset = Freq(time_length=cfg['DATALOADER']['TIME_LENGTH'],
+                         time_scale=cfg['MODEL']['ALPHA'],
+                         freq_min=cfg['DATALOADER']['FREQ_MIN'],
+                         freq_max=cfg['DATALOADER']['FREQ_MAX'],
+                         sigma=cfg['DATALOADER']['SIGMA'],
+                         mean_signal_length=cfg['DATALOADER']['MEAN_SIGNAL_LENGTH'],
+                         variable_signal_length=cfg['DATALOADER']['VARIABLE_SIGNAL_LENGTH'],
+                         variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
+                         phase_shift=cfg['DATALOADER']['PHASE_SHIFT'])
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg['TRAIN']['BATCHSIZE'],
                                                    num_workers=2, shuffle=True,

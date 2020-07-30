@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 class RecurrentNeuralNetwork(nn.Module):
     def __init__(self, n_in, n_out, n_hid, device,
-                 alpha_time_scale=0.25, beta_time_scale=0.1, activation='tanh', sigma_neu=0.05, sigma_syn=0.002,
+                 alpha_time_scale=0.25, beta_time_scale=0.1, jij_std=0.045, activation='tanh', sigma_neu=0.05, sigma_syn=0.002,
                  use_bias=True, anti_hebbian=True):
         super(RecurrentNeuralNetwork, self).__init__()
         self.n_in = n_in
@@ -15,6 +15,7 @@ class RecurrentNeuralNetwork(nn.Module):
         self.n_out = n_out
         self.w_in = nn.Linear(n_in, n_hid, bias=False)
         self.w_hh = nn.Linear(n_hid, n_hid, bias=use_bias)
+        nn.init.uniform_(self.w_hh.weight, -jij_std, jij_std)
         self.w_out = nn.Linear(n_hid, n_out, bias=False)
 
         self.activation = activation
@@ -49,9 +50,8 @@ class RecurrentNeuralNetwork(nn.Module):
             outer_product[i, :, :] = torch.ger(firing_rate[i], firing_rate[i])
         return outer_product + torch.randn_like(synapse).to(self.device) * self.sigma_syn * torch.sqrt(beta)
 
-    def forward(self, input_signal, hidden):
+    def forward(self, input_signal, hidden, length):
         num_batch = input_signal.size(0)
-        length = input_signal.size(1)
         hidden_list = torch.zeros(length, num_batch, self.n_hid).type_as(input_signal.data)
         output_list = torch.zeros(length, num_batch, self.n_out).type_as(input_signal.data)
 
@@ -88,8 +88,7 @@ class RecurrentNeuralNetwork(nn.Module):
                 hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
             elif self.activation == 'identity':
                 activated = hidden
-                if self.beta[
-                    0].item() == 0:  # Short-term synaptic plasticityを考えない場合
+                if self.beta[0].item() == 0:  # Short-term synaptic plasticityを考えない場合
                     tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(activated)
                     neural_noise = self.make_neural_noise(hidden, self.alpha)
                     hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
