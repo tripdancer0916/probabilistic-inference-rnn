@@ -51,7 +51,7 @@ class CueCombination(data.Dataset):
                         (sigma_2 ** 2) * signal1_mu) / (sigma_1 ** 2 + sigma_2 ** 2)
         target = np.array(mu_posterior)
 
-        signal_input = np.concatenate((signal1_input, signal2_input), axis=0)
+        signal_input = np.vstack((signal1_input, signal2_input))
         signal_input = np.expand_dims(signal_input, axis=1)
         target = np.expand_dims(target, axis=0)
 
