@@ -65,7 +65,19 @@ def main(config_path):
                                    variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
                                    condition=cfg['DATALOADER']['CONDITION'])
 
+    valid_dataset = CueCombination(time_length=cfg['DATALOADER']['TIME_LENGTH'],
+                                   time_scale=cfg['MODEL']['ALPHA'],
+                                   mu_min=cfg['DATALOADER']['MU_MIN'],
+                                   mu_max=cfg['DATALOADER']['MU_MAX'],
+                                   mean_signal_length=cfg['DATALOADER']['MEAN_SIGNAL_LENGTH'],
+                                   variable_signal_length=cfg['DATALOADER']['VARIABLE_SIGNAL_LENGTH'],
+                                   variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
+                                   condition='restricted_gains')
+
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg['TRAIN']['BATCHSIZE'],
+                                                   num_workers=2, shuffle=True,
+                                                   worker_init_fn=lambda x: np.random.seed())
+    valid_dataloader = torch.utils.data.DataLoader(valid_dataset, batch_size=cfg['TRAIN']['BATCHSIZE'],
                                                    num_workers=2, shuffle=True,
                                                    worker_init_fn=lambda x: np.random.seed())
 
@@ -109,9 +121,36 @@ def main(config_path):
             optimizer.step()
 
         if epoch % cfg['TRAIN']['DISPLAY_EPOCH'] == 0:
-            print(f'Train Epoch: {epoch}, Loss: {loss.item():.4f}, Norm term: {active_norm.item():.4f}')
-            print('output', output[:5, -1, 0].cpu().detach().numpy())
-            print('target', target[:5, -1].cpu().detach().numpy())
+            model.eval()
+            for i, data in enumerate(valid_dataloader):
+                inputs, target = data
+                inputs, target = inputs.float(), target.float()
+                inputs, target = Variable(inputs).to(device), Variable(target).to(device)
+
+                if cfg['TRAIN']['RANDOM_START']:
+                    hidden_np = np.random.normal(0, 0.5, size=(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
+                else:
+                    hidden_np = np.zeros((cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
+                hidden = torch.from_numpy(hidden_np).float()
+                hidden = hidden.to(device)
+
+                variable_length = np.random.randint(-cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
+                                                    cfg['DATALOADER']['VARIABLE_TIME_LENGTH'] + 1)
+                time_length = cfg['DATALOADER']['TIME_LENGTH'] + variable_length
+                hidden_list, output, hidden = model(inputs, hidden, time_length)
+
+                loss = torch.nn.MSELoss()(output[:, -1], target[:, :])
+                for j in range(2, cfg['DATALOADER']['FIXATION'] + 1):
+                    loss += torch.nn.MSELoss()(output[:, -j], target[:, :])
+                dummy_zero = torch.zeros([cfg['TRAIN']['BATCHSIZE'],
+                                          time_length,
+                                          cfg['MODEL']['SIZE']]).float().to(device)
+                active_norm = torch.nn.MSELoss()(hidden_list, dummy_zero)
+
+                loss += cfg['TRAIN']['ACTIVATION_LAMBDA'] * active_norm
+                print(f'Train Epoch: {epoch}, Loss: {loss.item():.4f}, Norm term: {active_norm.item():.4f}')
+                print('output', output[:5, -1, 0].cpu().detach().numpy())
+                print('target', target[:5, -1].cpu().detach().numpy())
 
         if epoch > 0 and epoch % cfg['TRAIN']['NUM_SAVE_EPOCH'] == 0:
             torch.save(model.state_dict(), os.path.join(save_path, f'epoch_{epoch}.pth'))
