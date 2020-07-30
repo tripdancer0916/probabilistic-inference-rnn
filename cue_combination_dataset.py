@@ -52,7 +52,7 @@ class CueCombination(data.Dataset):
         target = np.array(mu_posterior)
 
         signal_input = np.vstack((signal1_input, signal2_input))
-        # signal_input = np.expand_dims(signal_input, axis=1)
+        signal_input = signal_input.T
         target = np.expand_dims(target, axis=0)
 
         return signal_input, target
