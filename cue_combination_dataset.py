@@ -37,8 +37,7 @@ class CueCombination(data.Dataset):
         if self.condition == 'all_gains':
             sigma_1, sigma_2 = np.random.choice([0.8944, 1, 1.155, 1.414, 2.0], size=2)
         else:
-            sigma_1 = np.random.choice([0.8944, 2.0], size=1)
-            sigma_2 = sigma_1
+            sigma_1, sigma_2 = np.random.choice([0.8944, 1.155, 2.0], size=2)
         signal_length = self.mean_signal_length + v
 
         # signal
