@@ -148,9 +148,9 @@ def main(config_path):
                 active_norm = torch.nn.MSELoss()(hidden_list, dummy_zero)
 
                 loss += cfg['TRAIN']['ACTIVATION_LAMBDA'] * active_norm
-                print(f'Train Epoch: {epoch}, Loss: {loss.item():.4f}, Norm term: {active_norm.item():.4f}')
-                print('output', output[:5, -1, 0].cpu().detach().numpy())
-                print('target', target[:5, -1].cpu().detach().numpy())
+            print(f'Train Epoch: {epoch}, Loss: {loss.item():.4f}, Norm term: {active_norm.item():.4f}')
+            print('output', output[:5, -1, 0].cpu().detach().numpy())
+            print('target', target[:5, -1].cpu().detach().numpy())
 
         if epoch > 0 and epoch % cfg['TRAIN']['NUM_SAVE_EPOCH'] == 0:
             torch.save(model.state_dict(), os.path.join(save_path, f'epoch_{epoch}.pth'))
