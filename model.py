@@ -56,6 +56,9 @@ class RecurrentNeuralNetwork(nn.Module):
                 neural_noise = self.make_neural_noise(hidden, self.alpha)
                 hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
 
+                # tmp_hidden = self.w_in(input_signal[t])
+                # hidden = F.relu(tmp_hidden)
+
             elif self.activation == 'identity':
                 activated = hidden
                 tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(activated)
