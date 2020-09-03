@@ -17,8 +17,6 @@ from torch.autograd import Variable
 from cue_combination_dataset import CueCombination
 from model import RecurrentNeuralNetwork
 
-eps_tensor = torch.tensor(0.00001)
-
 
 def main(config_path):
     # hyper-parameter
@@ -40,6 +38,8 @@ def main(config_path):
     torch.manual_seed(cfg['MACHINE']['SEED'])
     device = torch.device('cuda' if use_cuda else 'cpu')
     print(device)
+
+    eps_tensor = torch.tensor(0.00001).to(device)
 
     if 'ALPHA' not in cfg['MODEL'].keys():
         cfg['MODEL']['ALPHA'] = 0.25
@@ -91,7 +91,8 @@ def main(config_path):
 
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
                            lr=cfg['TRAIN']['LR'], weight_decay=cfg['TRAIN']['WEIGHT_DECAY'])
-
+    a_list = torch.linspace(-20, 20, 40) + 0.5
+    a_list = a_list.to(device)
     for epoch in range(cfg['TRAIN']['NUM_EPOCH'] + 1):
         model.train()
         for i, data in enumerate(train_dataloader):
@@ -113,8 +114,7 @@ def main(config_path):
 
             kldiv_loss = 0
             # print(target.shape)
-            a_list = torch.linspace(-20, 20, 40) + 0.5
-            a_list = a_list.to(device)
+
             # print(output_list[0])
             for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
                 q_tensor_soft = torch.zeros(40).to(device)
