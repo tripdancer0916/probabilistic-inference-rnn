@@ -54,12 +54,12 @@ class CueCombination(data.Dataset):
             signal2_input[t] = np.random.poisson(signal2_base)
 
         # target
-        sigma_1 = np.sqrt(1 / g_1)
-        sigma_2 = np.sqrt(1 / g_2)
+        sigma_1 = np.sqrt(1 / g_1) * 3
+        sigma_2 = np.sqrt(1 / g_2) * 3
         mu_posterior = ((sigma_1 ** 2) * signal_mu +
                         (sigma_2 ** 2) * signal_mu) / (sigma_1 ** 2 + sigma_2 ** 2)
         g_3 = g_1 + g_2
-        sigma_posterior = np.sqrt(1 / g_3)
+        sigma_posterior = np.sqrt(1 / g_3) * 3
         n = np.linspace(-20, 20, 40)
         p = []
         for i in range(len(n)):
@@ -67,7 +67,7 @@ class CueCombination(data.Dataset):
         target = np.array(p)
 
         signal_input = np.concatenate((signal1_input, signal2_input), axis=1)
-        signal_input = signal_input.T
+        # signal_input = signal_input.T
         target = np.expand_dims(target, axis=0)
 
         return signal_input, target

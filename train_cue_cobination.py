@@ -87,7 +87,7 @@ def main(config_path):
                                                    worker_init_fn=lambda x: np.random.seed())
 
     print(model)
-    print('Epoch Loss Acc')
+    # print('Epoch Loss Acc')
 
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
                            lr=cfg['TRAIN']['LR'], weight_decay=cfg['TRAIN']['WEIGHT_DECAY'])
@@ -112,11 +112,25 @@ def main(config_path):
             hidden_list, output_list, hidden = model(inputs, hidden, cfg['DATALOADER']['TIME_LENGTH'])
 
             kldiv_loss = 0
-            for sample_id in cfg['TRAIN']['BATCHSIZE']:
-                q_tensor = torch.histc(output_list[sample_id], bins=40, min=-20, max=20) / cfg['DATALOADER']['TIME_LENGTH']
-                p_tensor = target[sample_id]
-                for i in range(40):
-                    kldiv_loss += q_tensor[i] * (q_tensor[i] / p_tensor[i] + eps_tensor).log()
+            # print(target.shape)
+            a_list = torch.linspace(-20, 20, 40) + 0.5
+            # print(output_list[0])
+            for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
+                q_tensor_soft = torch.zeros(40)
+                for j in range(cfg['DATALOADER']['TIME_LENGTH']):
+                    q_tensor_soft += - torch.nn.Tanh()((output_list[sample_id, j]-a_list)**2 - 0.25) / 2 + 0.5
+                    # print(q_tensor_soft)
+                q_tensor_soft /= cfg['DATALOADER']['TIME_LENGTH']
+                # print(q_tensor_soft)
+                p_tensor = target[sample_id, 0]
+                # print(p_tensor)
+                # print(q_tensor_soft[0], p_tensor[0], (q_tensor_soft[0] / (p_tensor[0] + eps_tensor) + eps_tensor).log())
+                # print(q_tensor_soft[0] * (q_tensor_soft[0] / p_tensor[0] + eps_tensor).log())
+                for j in range(40):
+                    kldiv_loss += q_tensor_soft[j] * (q_tensor_soft[j] / (p_tensor[j] + eps_tensor) + eps_tensor).log()
+                    # print(kldiv_loss)
+
+                # print(kldiv_loss)
 
             kldiv_loss.backward()
             optimizer.step()
@@ -137,19 +151,20 @@ def main(config_path):
 
                 hidden_list, output_list, hidden = model(inputs, hidden, cfg['DATALOADER']['TIME_LENGTH'])
 
-                q_tensor = torch.histc(output_list, bins=40, min=-20, max=20) / cfg['DATALOADER']['TIME_LENGTH']
-
                 kldiv_loss = 0
-                for sample_id in cfg['TRAIN']['BATCHSIZE']:
-                    q_tensor = torch.histc(output_list[sample_id], bins=40, min=-20, max=20) / cfg['DATALOADER'][
-                        'TIME_LENGTH']
-                    p_tensor = target[sample_id]
-                    for i in range(40):
-                        kldiv_loss += q_tensor[i] * (q_tensor[i] / p_tensor[i] + eps_tensor).log()
+                a_list = torch.linspace(-20, 20, 40) + 0.5
+                for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
+                    q_tensor_soft = torch.zeros(40)
+                    for j in range(cfg['DATALOADER']['TIME_LENGTH']):
+                        q_tensor_soft += - torch.nn.Tanh()((output_list[sample_id, j] - a_list) ** 2 - 0.25) / 2 + 0.5
+                    q_tensor_soft /= cfg['DATALOADER']['TIME_LENGTH']
+                    p_tensor = target[sample_id, 0]
+                    for j in range(40):
+                        kldiv_loss += q_tensor_soft[j] * (q_tensor_soft[j] / (p_tensor[j] + eps_tensor) + eps_tensor).log()
 
             print(f'Train Epoch: {epoch}, Loss: {kldiv_loss.item():.4f}')
             print('output', output_list[:5, -5:, 0].cpu().detach().numpy())
-            print('target', np.max(target[:5].cpu().detach().numpy(), axis=1))
+            print('target', np.argmax(target[:5, 0].cpu().detach().numpy(), axis=1) - 20)
 
         if epoch > 0 and epoch % cfg['TRAIN']['NUM_SAVE_EPOCH'] == 0:
             torch.save(model.state_dict(), os.path.join(save_path, f'epoch_{epoch}.pth'))
