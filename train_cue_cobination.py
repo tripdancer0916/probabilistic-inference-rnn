@@ -17,6 +17,8 @@ from torch.autograd import Variable
 from cue_combination_dataset import CueCombination
 from model import RecurrentNeuralNetwork
 
+eps_tensor = torch.tensor(0.00001)
+
 
 def main(config_path):
     # hyper-parameter
@@ -27,8 +29,8 @@ def main(config_path):
 
     # save path
     os.makedirs('trained_model', exist_ok=True)
-    os.makedirs('trained_model/cue_combination', exist_ok=True)
-    save_path = f'trained_model/cue_combination/{model_name}'
+    os.makedirs('trained_model/cue_combination_sampling', exist_ok=True)
+    save_path = f'trained_model/cue_combination_sampling/{model_name}'
     os.makedirs(save_path, exist_ok=True)
 
     # copy config file
@@ -48,7 +50,8 @@ def main(config_path):
     if 'RANDOM_START' not in cfg['TRAIN'].keys():
         cfg['TRAIN']['RANDOM_START'] = True
 
-    model = RecurrentNeuralNetwork(n_in=2, n_out=1, n_hid=cfg['MODEL']['SIZE'], device=device,
+    model = RecurrentNeuralNetwork(n_in=2*cfg['DATALOADER']['INPUT_NEURON'], n_out=1, n_hid=cfg['MODEL']['SIZE'],
+                                   device=device,
                                    alpha_time_scale=cfg['MODEL']['ALPHA'], beta_time_scale=cfg['MODEL']['BETA'],
                                    activation=cfg['MODEL']['ACTIVATION'],
                                    sigma_neu=cfg['MODEL']['SIGMA_NEU'],
@@ -63,7 +66,8 @@ def main(config_path):
                                    mean_signal_length=cfg['DATALOADER']['MEAN_SIGNAL_LENGTH'],
                                    variable_signal_length=cfg['DATALOADER']['VARIABLE_SIGNAL_LENGTH'],
                                    variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
-                                   condition=cfg['DATALOADER']['CONDITION'])
+                                   condition=cfg['DATALOADER']['CONDITION'],
+                                   input_neuron=cfg['DATALOADER']['INPUT_NEURON'])
 
     valid_dataset = CueCombination(time_length=cfg['DATALOADER']['TIME_LENGTH'],
                                    time_scale=cfg['MODEL']['ALPHA'],
@@ -72,7 +76,8 @@ def main(config_path):
                                    mean_signal_length=cfg['DATALOADER']['MEAN_SIGNAL_LENGTH'],
                                    variable_signal_length=cfg['DATALOADER']['VARIABLE_SIGNAL_LENGTH'],
                                    variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
-                                   condition='all_gains')
+                                   condition='all_gains',
+                                   input_neuron=cfg['DATALOADER']['INPUT_NEURON'])
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg['TRAIN']['BATCHSIZE'],
                                                    num_workers=2, shuffle=True,
@@ -103,21 +108,17 @@ def main(config_path):
 
             optimizer.zero_grad()
             hidden = hidden.detach()
-            variable_length = np.random.randint(-cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
-                                                cfg['DATALOADER']['VARIABLE_TIME_LENGTH'] + 1)
-            time_length = cfg['DATALOADER']['TIME_LENGTH'] + variable_length
-            hidden_list, output, hidden = model(inputs, hidden, time_length)
 
-            loss = torch.nn.MSELoss()(output[:, -1], target[:, :])
-            for j in range(2, cfg['DATALOADER']['FIXATION'] + 1):
-                loss += torch.nn.MSELoss()(output[:, -j], target[:, :])
-            dummy_zero = torch.zeros([cfg['TRAIN']['BATCHSIZE'],
-                                      time_length,
-                                      cfg['MODEL']['SIZE']]).float().to(device)
-            active_norm = torch.nn.MSELoss()(hidden_list, dummy_zero)
+            hidden_list, output_list, hidden = model(inputs, hidden, cfg['DATALOADER']['TIME_LENGTH'])
 
-            loss += cfg['TRAIN']['ACTIVATION_LAMBDA'] * active_norm
-            loss.backward()
+            kldiv_loss = 0
+            for sample_id in cfg['TRAIN']['BATCHSIZE']:
+                q_tensor = torch.histc(output_list[sample_id], bins=40, min=-20, max=20) / cfg['DATALOADER']['TIME_LENGTH']
+                p_tensor = target[sample_id]
+                for i in range(40):
+                    kldiv_loss += q_tensor[i] * (q_tensor[i] / p_tensor[i] + eps_tensor).log()
+
+            kldiv_loss.backward()
             optimizer.step()
 
         if epoch % cfg['TRAIN']['DISPLAY_EPOCH'] == 0:
@@ -134,23 +135,21 @@ def main(config_path):
                 hidden = torch.from_numpy(hidden_np).float()
                 hidden = hidden.to(device)
 
-                variable_length = np.random.randint(-cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
-                                                    cfg['DATALOADER']['VARIABLE_TIME_LENGTH'] + 1)
-                time_length = cfg['DATALOADER']['TIME_LENGTH'] + variable_length
-                hidden_list, output, hidden = model(inputs, hidden, time_length)
+                hidden_list, output_list, hidden = model(inputs, hidden, cfg['DATALOADER']['TIME_LENGTH'])
 
-                loss = torch.nn.MSELoss()(output[:, -1], target[:, :])
-                for j in range(2, cfg['DATALOADER']['FIXATION'] + 1):
-                    loss += torch.nn.MSELoss()(output[:, -j], target[:, :])
-                dummy_zero = torch.zeros([cfg['TRAIN']['BATCHSIZE'],
-                                          time_length,
-                                          cfg['MODEL']['SIZE']]).float().to(device)
-                active_norm = torch.nn.MSELoss()(hidden_list, dummy_zero)
+                q_tensor = torch.histc(output_list, bins=40, min=-20, max=20) / cfg['DATALOADER']['TIME_LENGTH']
 
-                loss += cfg['TRAIN']['ACTIVATION_LAMBDA'] * active_norm
-            print(f'Train Epoch: {epoch}, Loss: {loss.item():.4f}, Norm term: {active_norm.item():.4f}')
-            print('output', output[:5, -1, 0].cpu().detach().numpy())
-            print('target', target[:5, -1].cpu().detach().numpy())
+                kldiv_loss = 0
+                for sample_id in cfg['TRAIN']['BATCHSIZE']:
+                    q_tensor = torch.histc(output_list[sample_id], bins=40, min=-20, max=20) / cfg['DATALOADER'][
+                        'TIME_LENGTH']
+                    p_tensor = target[sample_id]
+                    for i in range(40):
+                        kldiv_loss += q_tensor[i] * (q_tensor[i] / p_tensor[i] + eps_tensor).log()
+
+            print(f'Train Epoch: {epoch}, Loss: {kldiv_loss.item():.4f}')
+            print('output', output_list[:5, -5:, 0].cpu().detach().numpy())
+            print('target', np.max(target[:5].cpu().detach().numpy(), axis=1))
 
         if epoch > 0 and epoch % cfg['TRAIN']['NUM_SAVE_EPOCH'] == 0:
             torch.save(model.state_dict(), os.path.join(save_path, f'epoch_{epoch}.pth'))
