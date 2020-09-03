@@ -164,7 +164,9 @@ def main(config_path):
 
             print(f'Train Epoch: {epoch}, Loss: {kldiv_loss.item():.4f}')
             print('output', output_list[:5, -5:, 0].cpu().detach().numpy())
+            print('output variability', np.std(output_list[:5, :, 0].cpu().detach().numpy(), axis=1))
             print('target', np.argmax(target[:5, 0].cpu().detach().numpy(), axis=1) - 20)
+            print('target_uncertainty', np.max(target[:5, 0].cpu().detach().numpy(), axis=1) - 20)
 
         if epoch > 0 and epoch % cfg['TRAIN']['NUM_SAVE_EPOCH'] == 0:
             torch.save(model.state_dict(), os.path.join(save_path, f'epoch_{epoch}.pth'))
