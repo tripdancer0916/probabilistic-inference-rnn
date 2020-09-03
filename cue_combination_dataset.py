@@ -16,7 +16,8 @@ class CueCombination(data.Dataset):
             variable_signal_length,
             variable_time_length,
             condition,
-            input_neuron):
+            input_neuron,
+            uncertainty):
         self.time_length = time_length
         self.time_scale = time_scale
         self.mu_min = mu_min
@@ -26,6 +27,7 @@ class CueCombination(data.Dataset):
         self.variable_time_length = variable_time_length
         self.condition = condition
         self.input_neuron = input_neuron
+        self.uncertainty = uncertainty
 
     def __len__(self):
         return 200
@@ -54,12 +56,12 @@ class CueCombination(data.Dataset):
             signal2_input[t] = np.random.poisson(signal2_base)
 
         # target
-        sigma_1 = np.sqrt(1 / g_1) * 3
-        sigma_2 = np.sqrt(1 / g_2) * 3
+        sigma_1 = np.sqrt(1 / g_1) * self.uncertainty
+        sigma_2 = np.sqrt(1 / g_2) * self.uncertainty
         mu_posterior = ((sigma_1 ** 2) * signal_mu +
                         (sigma_2 ** 2) * signal_mu) / (sigma_1 ** 2 + sigma_2 ** 2)
         g_3 = g_1 + g_2
-        sigma_posterior = np.sqrt(1 / g_3) * 3
+        sigma_posterior = np.sqrt(1 / g_3) * self.uncertainty
         n = np.linspace(-20, 20, 40)
         p = []
         for i in range(len(n)):
