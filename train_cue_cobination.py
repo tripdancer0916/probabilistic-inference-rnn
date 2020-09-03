@@ -114,9 +114,10 @@ def main(config_path):
             kldiv_loss = 0
             # print(target.shape)
             a_list = torch.linspace(-20, 20, 40) + 0.5
+            a_list = a_list.to(device)
             # print(output_list[0])
             for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
-                q_tensor_soft = torch.zeros(40)
+                q_tensor_soft = torch.zeros(40).to(device)
                 for j in range(cfg['DATALOADER']['TIME_LENGTH']):
                     q_tensor_soft += - torch.nn.Tanh()((output_list[sample_id, j]-a_list)**2 - 0.25) / 2 + 0.5
                     # print(q_tensor_soft)
@@ -152,9 +153,8 @@ def main(config_path):
                 hidden_list, output_list, hidden = model(inputs, hidden, cfg['DATALOADER']['TIME_LENGTH'])
 
                 kldiv_loss = 0
-                a_list = torch.linspace(-20, 20, 40) + 0.5
                 for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
-                    q_tensor_soft = torch.zeros(40)
+                    q_tensor_soft = torch.zeros(40).to(device)
                     for j in range(cfg['DATALOADER']['TIME_LENGTH']):
                         q_tensor_soft += - torch.nn.Tanh()((output_list[sample_id, j] - a_list) ** 2 - 0.25) / 2 + 0.5
                     q_tensor_soft /= cfg['DATALOADER']['TIME_LENGTH']
