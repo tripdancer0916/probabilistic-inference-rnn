@@ -68,6 +68,8 @@ class CueCombination(data.Dataset):
         for i in range(1000):
             p_soft += -np.tanh(10 * ((target_sample[i] - a_list) ** 2 - 0.25)) / 2 + 0.5
 
+        p_soft /= 1000
+
         signal_input = np.concatenate((signal1_input, signal2_input), axis=1)
         # signal_input = signal_input.T
         target = np.expand_dims(p_soft, axis=0)
