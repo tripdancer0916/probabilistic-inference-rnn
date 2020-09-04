@@ -55,12 +55,12 @@ class CueCombination(data.Dataset):
         signal1_base = g_1 * np.exp(-(signal_mu - phi) ** 2 / (2.0 * sigma_sq))
         signal2_base = g_2 * np.exp(-(signal_mu - phi) ** 2 / (2.0 * sigma_sq))
         if self.fix_input:
-            # signal1_input_tmp = np.random.poisson(signal1_base)
-            signal1_input_tmp = signal1_base
+            signal1_input_tmp = np.random.poisson(signal1_base)
+            # signal1_input_tmp = signal1_base
             for t in range(self.time_length):
                 signal1_input[t] = signal1_input_tmp
-            # signal2_input_tmp = np.random.poisson(signal2_base)
-            signal2_input_tmp = signal2_base
+            signal2_input_tmp = np.random.poisson(signal2_base)
+            # signal2_input_tmp = signal2_base
             for t in range(self.time_length):
                 signal2_input[t] = signal2_input_tmp
         else:
