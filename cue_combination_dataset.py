@@ -33,7 +33,7 @@ class CueCombination(data.Dataset):
         self.fix_input = fix_input
 
     def __len__(self):
-        return 200
+        return 1000
 
     def __getitem__(self, item):
         # input signal

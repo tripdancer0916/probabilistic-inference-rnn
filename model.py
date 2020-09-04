@@ -56,8 +56,9 @@ class RecurrentNeuralNetwork(nn.Module):
                     tmp_hidden = self.w_in(input_signal[t])
                     hidden = F.relu(tmp_hidden)
                 else:
-                    print(self.w_in(input_signal[t]).shape)
-                    print(self.w_hh(hidden).shape)
+                    # print('input_signal[t].shape: ', input_signal[t].shape)
+                    # print(self.w_in(input_signal[t]).shape)
+                    # print(self.w_hh(hidden).shape)
                     tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(hidden)
                     tmp_hidden = F.relu(tmp_hidden)
                     neural_noise = self.make_neural_noise(hidden, self.alpha)
