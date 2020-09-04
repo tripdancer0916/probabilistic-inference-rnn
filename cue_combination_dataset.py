@@ -42,7 +42,8 @@ class CueCombination(data.Dataset):
 
         signal_mu = np.random.rand() * (self.mu_max - self.mu_min) + self.mu_min
         if self.condition == 'all_gains':
-            g_1, g_2 = np.random.choice([0.25, 0.5, 0.75, 1.0, 1.25], size=2)
+            # g_1, g_2 = np.random.choice([0.25, 0.5, 0.75, 1.0, 1.25], size=2)
+            g_1, g_2 = np.random.rand(2) + 0.25
         else:
             g_1 = np.random.choice([0.25, 1.25], size=1)
             g_2 = g_1
