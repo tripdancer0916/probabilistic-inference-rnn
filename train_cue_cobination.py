@@ -52,7 +52,7 @@ def main(config_path):
     if 'FFNN' not in cfg['MODEL'].keys():
         cfg['MODEL']['FFNN'] = False
     if 'FIX_INPUT' not in cfg['DATALOADER'].keys():
-        cfg['DATALODER']['FIX_INPUT'] = False
+        cfg['DATALOADER']['FIX_INPUT'] = False
 
     if cfg['MODEL']['FFNN']:
         model = RecurrentNeuralNetwork(n_in=2 * cfg['DATALOADER']['INPUT_NEURON'], n_out=1, n_hid=cfg['MODEL']['SIZE'],
