@@ -62,14 +62,14 @@ class CueCombination(data.Dataset):
                         (sigma_2 ** 2) * signal_mu) / (sigma_1 ** 2 + sigma_2 ** 2)
         g_3 = g_1 + g_2
         sigma_posterior = np.sqrt(1 / g_3) * self.uncertainty
-        n = np.linspace(-20, 20, 40)
-        p = []
-        for i in range(len(n)):
-            p.append(norm.pdf(x=n[i], loc=mu_posterior, scale=sigma_posterior))
-        target = np.array(p)
+        target_sample = np.random.normal(mu_posterior, sigma_posterior, 1000)
+        a_list = np.linspace(-20, 20, 40) + 0.5
+        p_soft = np.zeros(40)
+        for i in range(1000):
+            p_soft += -np.tanh(10 * ((target_sample[i] - a_list) ** 2 - 0.25)) / 2 + 0.5
 
         signal_input = np.concatenate((signal1_input, signal2_input), axis=1)
         # signal_input = signal_input.T
-        target = np.expand_dims(target, axis=0)
+        target = np.expand_dims(p_soft, axis=0)
 
         return signal_input, target
