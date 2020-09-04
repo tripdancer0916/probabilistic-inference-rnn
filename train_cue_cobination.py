@@ -82,7 +82,8 @@ def main(config_path):
                                    variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
                                    condition=cfg['DATALOADER']['CONDITION'],
                                    input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
-                                   uncertainty=cfg['DATALOADER']['UNCERTAINTY'])
+                                   uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
+                                   fix_input=cfg['DATALOADER']['FIX_INPUT'])
 
     valid_dataset = CueCombination(time_length=cfg['DATALOADER']['TIME_LENGTH'],
                                    time_scale=cfg['MODEL']['ALPHA'],
@@ -93,7 +94,8 @@ def main(config_path):
                                    variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
                                    condition='all_gains',
                                    input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
-                                   uncertainty=cfg['DATALOADER']['UNCERTAINTY'])
+                                   uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
+                                   fix_input=cfg['DATALOADER']['FIX_INPUT'])
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg['TRAIN']['BATCHSIZE'],
                                                    num_workers=2, shuffle=True,
