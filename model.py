@@ -10,7 +10,8 @@ class RecurrentNeuralNetwork(nn.Module):
                  alpha_time_scale=0.25, beta_time_scale=0.1, jij_std=0.045,
                  activation='tanh',
                  sigma_neu=0.05, sigma_syn=0.002,
-                 use_bias=True, anti_hebbian=True):
+                 use_bias=True, anti_hebbian=True,
+                 ffnn=False):
         super(RecurrentNeuralNetwork, self).__init__()
         self.n_in = n_in
         self.n_hid = n_hid
@@ -24,6 +25,7 @@ class RecurrentNeuralNetwork(nn.Module):
         self.sigma_neu = sigma_neu
 
         self.device = device
+        self.ffnn = ffnn
 
         self.alpha = torch.ones(self.n_hid) * alpha_time_scale
         self.alpha = self.alpha.to(self.device)
@@ -50,14 +52,14 @@ class RecurrentNeuralNetwork(nn.Module):
                 hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
 
             elif self.activation == 'relu':
-                # print(input_signal[t].shape)
-                tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(hidden)
-                tmp_hidden = F.relu(tmp_hidden)
-                neural_noise = self.make_neural_noise(hidden, self.alpha)
-                hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
-
-                # tmp_hidden = self.w_in(input_signal[t])
-                # hidden = F.relu(tmp_hidden)
+                if self.ffnn:
+                    tmp_hidden = self.w_in(input_signal[t])
+                    hidden = F.relu(tmp_hidden)
+                else:
+                    tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(hidden)
+                    tmp_hidden = F.relu(tmp_hidden)
+                    neural_noise = self.make_neural_noise(hidden, self.alpha)
+                    hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
 
             elif self.activation == 'identity':
                 activated = hidden
