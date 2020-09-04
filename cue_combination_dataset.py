@@ -17,7 +17,9 @@ class CueCombination(data.Dataset):
             variable_time_length,
             condition,
             input_neuron,
-            uncertainty):
+            uncertainty,
+            fix_input=False,
+    ):
         self.time_length = time_length
         self.time_scale = time_scale
         self.mu_min = mu_min
@@ -28,6 +30,7 @@ class CueCombination(data.Dataset):
         self.condition = condition
         self.input_neuron = input_neuron
         self.uncertainty = uncertainty
+        self.fix_input = fix_input
 
     def __len__(self):
         return 200
@@ -50,11 +53,19 @@ class CueCombination(data.Dataset):
 
         # signal
         signal1_base = g_1 * np.exp(-(signal_mu - phi) ** 2 / (2.0 * sigma_sq))
-        for t in range(self.time_length):
-            signal1_input[t] = np.random.poisson(signal1_base)
         signal2_base = g_2 * np.exp(-(signal_mu - phi) ** 2 / (2.0 * sigma_sq))
-        for t in range(self.time_length):
-            signal2_input[t] = np.random.poisson(signal2_base)
+        if self.fix_input:
+            signal1_input_tmp = np.random.poisson(signal1_base)
+            for t in range(self.time_length):
+                signal1_input[t] = signal1_input_tmp
+            signal2_input_tmp = np.random.poisson(signal2_base)
+            for t in range(self.time_length):
+                signal2_input[t] = signal2_input_tmp
+        else:
+            for t in range(self.time_length):
+                signal1_input[t] = np.random.poisson(signal1_base)
+            for t in range(self.time_length):
+                signal2_input[t] = np.random.poisson(signal2_base)
 
         # target
         sigma_1 = np.sqrt(1 / g_1) * self.uncertainty
