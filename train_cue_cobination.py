@@ -54,24 +54,15 @@ def main(config_path):
     if 'FIX_INPUT' not in cfg['DATALOADER'].keys():
         cfg['DATALOADER']['FIX_INPUT'] = False
 
-    if cfg['MODEL']['FFNN']:
-        model = RecurrentNeuralNetwork(n_in=2 * cfg['DATALOADER']['INPUT_NEURON'], n_out=1, n_hid=cfg['MODEL']['SIZE'],
-                                       device=device,
-                                       alpha_time_scale=cfg['MODEL']['ALPHA'], beta_time_scale=cfg['MODEL']['BETA'],
-                                       activation=cfg['MODEL']['ACTIVATION'],
-                                       sigma_neu=cfg['MODEL']['SIGMA_NEU'],
-                                       sigma_syn=cfg['MODEL']['SIGMA_SYN'],
-                                       use_bias=cfg['MODEL']['USE_BIAS'],
-                                       anti_hebbian=cfg['MODEL']['ANTI_HEBB']).to(device)
-    else:
-        model = RecurrentNeuralNetwork(n_in=2*cfg['DATALOADER']['INPUT_NEURON'], n_out=1, n_hid=cfg['MODEL']['SIZE'],
-                                       device=device,
-                                       alpha_time_scale=cfg['MODEL']['ALPHA'], beta_time_scale=cfg['MODEL']['BETA'],
-                                       activation=cfg['MODEL']['ACTIVATION'],
-                                       sigma_neu=cfg['MODEL']['SIGMA_NEU'],
-                                       sigma_syn=cfg['MODEL']['SIGMA_SYN'],
-                                       use_bias=cfg['MODEL']['USE_BIAS'],
-                                       anti_hebbian=cfg['MODEL']['ANTI_HEBB']).to(device)
+    model = RecurrentNeuralNetwork(n_in=2 * cfg['DATALOADER']['INPUT_NEURON'], n_out=1, n_hid=cfg['MODEL']['SIZE'],
+                                   device=device,
+                                   alpha_time_scale=cfg['MODEL']['ALPHA'], beta_time_scale=cfg['MODEL']['BETA'],
+                                   activation=cfg['MODEL']['ACTIVATION'],
+                                   sigma_neu=cfg['MODEL']['SIGMA_NEU'],
+                                   sigma_syn=cfg['MODEL']['SIGMA_SYN'],
+                                   use_bias=cfg['MODEL']['USE_BIAS'],
+                                   anti_hebbian=cfg['MODEL']['ANTI_HEBB'],
+                                   ffnn=cfg['MODEL']['FFNN']).to(device)
 
     train_dataset = CueCombination(time_length=cfg['DATALOADER']['TIME_LENGTH'],
                                    time_scale=cfg['MODEL']['ALPHA'],
@@ -137,7 +128,7 @@ def main(config_path):
             for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
                 q_tensor_soft = torch.zeros(40).to(device)
                 for j in range(cfg['DATALOADER']['TIME_LENGTH']):
-                    q_tensor_soft += - torch.nn.Tanh()(2 * ((output_list[sample_id, j]-a_list)**2 - 0.25)) / 2 + 0.5
+                    q_tensor_soft += - torch.nn.Tanh()(2 * ((output_list[sample_id, j] - a_list) ** 2 - 0.25)) / 2 + 0.5
                     # print(q_tensor_soft)
                 q_tensor_soft /= cfg['DATALOADER']['TIME_LENGTH']
                 # print(q_tensor_soft)
@@ -174,11 +165,13 @@ def main(config_path):
                 for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
                     q_tensor_soft = torch.zeros(40).to(device)
                     for j in range(cfg['DATALOADER']['TIME_LENGTH']):
-                        q_tensor_soft += - torch.nn.Tanh()(2 * ((output_list[sample_id, j] - a_list) ** 2 - 0.25)) / 2 + 0.5
+                        q_tensor_soft += - torch.nn.Tanh()(
+                            2 * ((output_list[sample_id, j] - a_list) ** 2 - 0.25)) / 2 + 0.5
                     q_tensor_soft /= cfg['DATALOADER']['TIME_LENGTH']
                     p_tensor = target[sample_id, 0]
                     for j in range(40):
-                        kldiv_loss += q_tensor_soft[j] * (q_tensor_soft[j] / (p_tensor[j] + eps_tensor) + eps_tensor).log()
+                        kldiv_loss += q_tensor_soft[j] * (
+                                    q_tensor_soft[j] / (p_tensor[j] + eps_tensor) + eps_tensor).log()
 
             print(f'Train Epoch: {epoch}, Loss: {kldiv_loss.item():.4f}')
             print('output mean', np.mean(output_list[:5, -5:, 0].cpu().detach().numpy(), axis=1))
