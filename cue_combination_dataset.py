@@ -67,7 +67,7 @@ class CueCombination(data.Dataset):
         a_list = np.linspace(-20, 20, 40) + 0.5
         p_soft = np.zeros(40)
         for i in range(1000):
-            p_soft += -np.tanh(5 * ((target_sample[i] - a_list) ** 2 - 0.25)) / 2 + 0.5
+            p_soft += -np.tanh(2 * ((target_sample[i] - a_list) ** 2 - 0.25)) / 2 + 0.5
 
         p_soft /= 1000
 
