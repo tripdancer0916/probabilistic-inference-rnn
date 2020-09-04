@@ -49,9 +49,10 @@ def main(config_path):
         cfg['DATALOADER']['FIXATION'] = 1
     if 'RANDOM_START' not in cfg['TRAIN'].keys():
         cfg['TRAIN']['RANDOM_START'] = True
-
     if 'FFNN' not in cfg['MODEL'].keys():
         cfg['MODEL']['FFNN'] = False
+    if 'FIX_INPUT' not in cfg['DATALOADER'].keys():
+        cfg['DATALODER']['FIX_INPUT'] = False
 
     if cfg['MODEL']['FFNN']:
         model = RecurrentNeuralNetwork(n_in=2 * cfg['DATALOADER']['INPUT_NEURON'], n_out=1, n_hid=cfg['MODEL']['SIZE'],
@@ -62,15 +63,15 @@ def main(config_path):
                                        sigma_syn=cfg['MODEL']['SIGMA_SYN'],
                                        use_bias=cfg['MODEL']['USE_BIAS'],
                                        anti_hebbian=cfg['MODEL']['ANTI_HEBB']).to(device)
-
-    model = RecurrentNeuralNetwork(n_in=2*cfg['DATALOADER']['INPUT_NEURON'], n_out=1, n_hid=cfg['MODEL']['SIZE'],
-                                   device=device,
-                                   alpha_time_scale=cfg['MODEL']['ALPHA'], beta_time_scale=cfg['MODEL']['BETA'],
-                                   activation=cfg['MODEL']['ACTIVATION'],
-                                   sigma_neu=cfg['MODEL']['SIGMA_NEU'],
-                                   sigma_syn=cfg['MODEL']['SIGMA_SYN'],
-                                   use_bias=cfg['MODEL']['USE_BIAS'],
-                                   anti_hebbian=cfg['MODEL']['ANTI_HEBB']).to(device)
+    else:
+        model = RecurrentNeuralNetwork(n_in=2*cfg['DATALOADER']['INPUT_NEURON'], n_out=1, n_hid=cfg['MODEL']['SIZE'],
+                                       device=device,
+                                       alpha_time_scale=cfg['MODEL']['ALPHA'], beta_time_scale=cfg['MODEL']['BETA'],
+                                       activation=cfg['MODEL']['ACTIVATION'],
+                                       sigma_neu=cfg['MODEL']['SIGMA_NEU'],
+                                       sigma_syn=cfg['MODEL']['SIGMA_SYN'],
+                                       use_bias=cfg['MODEL']['USE_BIAS'],
+                                       anti_hebbian=cfg['MODEL']['ANTI_HEBB']).to(device)
 
     train_dataset = CueCombination(time_length=cfg['DATALOADER']['TIME_LENGTH'],
                                    time_scale=cfg['MODEL']['ALPHA'],
