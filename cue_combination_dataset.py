@@ -2,7 +2,6 @@
 
 import numpy as np
 import torch.utils.data as data
-from scipy.stats import norm
 
 
 class CueCombination(data.Dataset):
