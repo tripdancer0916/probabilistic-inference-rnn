@@ -18,6 +18,7 @@ class CueCombination(data.Dataset):
             input_neuron,
             uncertainty,
             fix_input=False,
+            same_mu=True,
     ):
         self.time_length = time_length
         self.time_scale = time_scale
@@ -30,6 +31,7 @@ class CueCombination(data.Dataset):
         self.input_neuron = input_neuron
         self.uncertainty = uncertainty
         self.fix_input = fix_input
+        self.same_mu = same_mu
 
     def __len__(self):
         return 1000
@@ -42,7 +44,11 @@ class CueCombination(data.Dataset):
         phi = np.linspace(self.mu_min, self.mu_max, self.input_neuron)
         sigma_sq = 5
 
-        signal_mu = np.random.rand() * (self.mu_max - self.mu_min) + self.mu_min
+        signal_mu1 = np.random.rand() * (self.mu_max - self.mu_min) + self.mu_min
+        if self.same_mu:
+            signal_mu2 = signal_mu1
+        else:
+            signal_mu2 = np.random.rand() * (self.mu_max - self.mu_min) + self.mu_min
         if self.condition == 'all_gains':
             # g_1, g_2 = np.random.choice([0.25, 0.5, 0.75, 1.0, 1.25], size=2)
             g_1, g_2 = np.random.rand(2) + 0.25
@@ -51,8 +57,8 @@ class CueCombination(data.Dataset):
             g_2 = g_1
 
         # signal
-        signal1_base = g_1 * np.exp(-(signal_mu - phi) ** 2 / (2.0 * sigma_sq))
-        signal2_base = g_2 * np.exp(-(signal_mu - phi) ** 2 / (2.0 * sigma_sq))
+        signal1_base = g_1 * np.exp(-(signal_mu1 - phi) ** 2 / (2.0 * sigma_sq))
+        signal2_base = g_2 * np.exp(-(signal_mu2 - phi) ** 2 / (2.0 * sigma_sq))
         if self.fix_input:
             signal1_input_tmp = np.random.poisson(signal1_base)
             # signal1_input_tmp = signal1_base
@@ -71,8 +77,8 @@ class CueCombination(data.Dataset):
         # target
         sigma_1 = np.sqrt(1 / g_1) * self.uncertainty
         sigma_2 = np.sqrt(1 / g_2) * self.uncertainty
-        mu_posterior = ((sigma_1 ** 2) * signal_mu +
-                        (sigma_2 ** 2) * signal_mu) / (sigma_1 ** 2 + sigma_2 ** 2)
+        mu_posterior = ((sigma_1 ** 2) * signal_mu2 +
+                        (sigma_2 ** 2) * signal_mu1) / (sigma_1 ** 2 + sigma_2 ** 2)
         g_3 = g_1 + g_2
         sigma_posterior = np.sqrt(1 / g_3) * self.uncertainty
         target_sample = np.random.normal(mu_posterior, sigma_posterior, 1000)

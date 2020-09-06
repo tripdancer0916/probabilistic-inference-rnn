@@ -53,6 +53,8 @@ def main(config_path):
         cfg['MODEL']['FFNN'] = False
     if 'FIX_INPUT' not in cfg['DATALOADER'].keys():
         cfg['DATALOADER']['FIX_INPUT'] = False
+    if 'SAME_MU' not in cfg['DATALOADER'].keys():
+        cfg['DATALOADER']['SAME_MU'] = True
 
     model = RecurrentNeuralNetwork(n_in=2 * cfg['DATALOADER']['INPUT_NEURON'], n_out=1, n_hid=cfg['MODEL']['SIZE'],
                                    device=device,
@@ -74,7 +76,8 @@ def main(config_path):
                                    condition=cfg['DATALOADER']['CONDITION'],
                                    input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
                                    uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
-                                   fix_input=cfg['DATALOADER']['FIX_INPUT'])
+                                   fix_input=cfg['DATALOADER']['FIX_INPUT'],
+                                   same_mu=cfg['DATALOADER']['SAME_MU'])
 
     valid_dataset = CueCombination(time_length=cfg['DATALOADER']['TIME_LENGTH'],
                                    time_scale=cfg['MODEL']['ALPHA'],
@@ -86,7 +89,8 @@ def main(config_path):
                                    condition='all_gains',
                                    input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
                                    uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
-                                   fix_input=cfg['DATALOADER']['FIX_INPUT'])
+                                   fix_input=cfg['DATALOADER']['FIX_INPUT'],
+                                   same_mu=cfg['DATALOADER']['SAME_MU'])
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg['TRAIN']['BATCHSIZE'],
                                                    num_workers=2, shuffle=True,
