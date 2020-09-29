@@ -55,16 +55,17 @@ def main(config_path):
         cfg['DATALOADER']['FIX_INPUT'] = False
     if 'SAME_MU' not in cfg['DATALOADER'].keys():
         cfg['DATALOADER']['SAME_MU'] = True
+    if 'NOISE_FIRST' not in cfg['MODEL'].keys():
+        cfg['MODEL']['NOISE_FIRST'] = False
 
     model = RecurrentNeuralNetwork(n_in=2 * cfg['DATALOADER']['INPUT_NEURON'], n_out=1, n_hid=cfg['MODEL']['SIZE'],
                                    device=device,
-                                   alpha_time_scale=cfg['MODEL']['ALPHA'], beta_time_scale=cfg['MODEL']['BETA'],
+                                   alpha_time_scale=cfg['MODEL']['ALPHA'],
                                    activation=cfg['MODEL']['ACTIVATION'],
                                    sigma_neu=cfg['MODEL']['SIGMA_NEU'],
-                                   sigma_syn=cfg['MODEL']['SIGMA_SYN'],
                                    use_bias=cfg['MODEL']['USE_BIAS'],
-                                   anti_hebbian=cfg['MODEL']['ANTI_HEBB'],
-                                   ffnn=cfg['MODEL']['FFNN']).to(device)
+                                   ffnn=cfg['MODEL']['FFNN'],
+                                   noise_first=cfg['MODEL']['NOISE_FIRST']).to(device)
 
     train_dataset = CueCombination(time_length=cfg['DATALOADER']['TIME_LENGTH'],
                                    time_scale=cfg['MODEL']['ALPHA'],
