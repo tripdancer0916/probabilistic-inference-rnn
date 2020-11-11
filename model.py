@@ -86,8 +86,8 @@ class RecurrentNeuralNetwork(nn.Module):
             else:
                 raise ValueError
 
-            output = 20 * nn.Tanh()(self.w_out(hidden))
-            # output = self.w_out(hidden)
+            # output = 20 * nn.Tanh()(self.w_out(hidden))
+            output = self.w_out(hidden)
             hidden_list[t] = hidden
             output_list[t] = output
 
