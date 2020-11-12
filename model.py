@@ -72,8 +72,8 @@ class RecurrentNeuralNetwork(nn.Module):
                         tmp_hidden = F.relu(tmp_hidden)
                         hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden
                     else:
-                        tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(hidden)
-                        tmp_hidden = F.relu(tmp_hidden)
+                        tmp_hidden = F.relu(self.w_in(input_signal[t])) + F.relu(self.w_hh(hidden))
+                        # tmp_hidden = F.relu(tmp_hidden)
                         neural_noise = self.make_neural_noise(hidden, self.alpha)
                         hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
 
@@ -86,8 +86,8 @@ class RecurrentNeuralNetwork(nn.Module):
             else:
                 raise ValueError
 
-            # output = 20 * nn.Tanh()(self.w_out(hidden))
-            output = self.w_out(hidden)
+            output = 20 * nn.Tanh()(self.w_out(hidden))
+            # output = self.w_out(hidden)
             hidden_list[t] = hidden
             output_list[t] = output
 
