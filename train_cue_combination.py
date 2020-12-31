@@ -172,7 +172,7 @@ def main(config_path):
                     for j in range(30, cfg['DATALOADER']['TIME_LENGTH']):
                         q_tensor_soft += - torch.nn.Tanh()(
                             2 * ((output_list[sample_id, j] - a_list) ** 2 - 0.25)) / 2 + 0.5
-                    q_tensor_soft /= cfg['DATALOADER']['TIME_LENGTH']
+                    q_tensor_soft /= (cfg['DATALOADER']['TIME_LENGTH'] - 30)
                     p_tensor = target[sample_id, 0]
                     for j in range(40):
                         kldiv_loss += q_tensor_soft[j] * (
