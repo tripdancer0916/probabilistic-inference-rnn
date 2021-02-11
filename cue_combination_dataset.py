@@ -96,6 +96,7 @@ class CueCombination(data.Dataset):
                 signal2_input[t] = signal2_input_tmp
         else:
             for t in range(self.time_length):
+                print(signal1_base)
                 signal1_input[t] = series_of_com(signal1_base, self.nu)
             for t in range(self.time_length):
                 signal2_input[t] = series_of_com(signal2_base, self.nu)
