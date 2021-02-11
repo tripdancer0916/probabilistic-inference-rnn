@@ -267,10 +267,10 @@ def main(config_path):
     for epoch in range(cfg['TRAIN']['NUM_EPOCH'] + 1):
         model.train()
         for i, data in enumerate(train_dataloader):
-            inputs, mu_target, sigma_target = data
-            inputs, mu_target, sigma_target = inputs.float(), mu_target.float(), sigma_target.float()
-            inputs, mu_target = Variable(inputs).to(device), Variable(mu_target).to(device)
-            sigma_target = Variable(sigma_target).to(device)
+            inputs, mu_target_list, sigma_target_list = data
+            inputs, mu_target_list, sigma_target_list = inputs.float(), mu_target_list.float(), sigma_target_list.float()
+            inputs, mu_target_list = Variable(inputs).to(device), Variable(mu_target_list).to(device)
+            sigma_target_list = Variable(sigma_target_list).to(device)
 
             if cfg['TRAIN']['RANDOM_START']:
                 hidden_np = np.random.normal(0, 0.5, size=(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
@@ -303,7 +303,8 @@ def main(config_path):
                 if sample_id == 0:
                     print(mu_output, sigma_output)
 
-                musigma_loss += (mu_output - mu_target) ** 2 + (sigma_output - sigma_target) ** 2
+                musigma_loss += (mu_output - mu_target_list[sample_id]) ** 2 + \
+                                (sigma_output - sigma_target_list[sample_id]) ** 2
 
             musigma_loss.backward()
             optimizer.step()
