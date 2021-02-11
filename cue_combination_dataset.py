@@ -5,8 +5,8 @@ import torch.utils.data as data
 
 
 def com_random(_lambda, nu):
-    if _lambda == 0:
-        return np.array([0])
+    if _lambda < 0.01:
+        return 0
 
     nu = np.atleast_1d(nu)
     alpha = np.atleast_1d(np.power(_lambda, 1 / nu))
@@ -18,7 +18,7 @@ def com_random(_lambda, nu):
     cdf = p
     k = 0
 
-    while any(u > cdf) and k < 10:
+    while any(u > cdf):
         k += 1
         p = (p * _lambda) / k ** nu
         cdf += p
@@ -47,7 +47,7 @@ class CueCombination(data.Dataset):
             uncertainty,
             fix_input=False,
             same_mu=True,
-            nu=1
+            nu=1,
     ):
         self.time_length = time_length
         self.time_scale = time_scale
