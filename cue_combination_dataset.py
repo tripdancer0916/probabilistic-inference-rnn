@@ -4,37 +4,33 @@ import numpy as np
 import torch.utils.data as data
 
 
-def com_random(_lambda, nu, size=None):
+def com_random(_lambda, nu):
     if _lambda == 0:
         return np.array([0])
-    size = size or 1
 
     nu = np.atleast_1d(nu)
     alpha = np.atleast_1d(np.power(_lambda, 1 / nu))
     Z = np.exp(nu * alpha) / ((2 * np.pi * alpha) ** ((nu - 1) / 2) * np.sqrt(nu))
 
-    U = np.random.uniform(low=0, high=1, size=size)
-    values = np.empty(size, dtype=int)
+    u = np.random.uniform(low=0, high=1)
 
-    for i in range(U.shape[0]):
-        p = 1 / Z
-        cdf = p
-        k = 0
-        u = U[i]
+    p = 1 / Z
+    cdf = p
+    k = 0
 
-        while any(u > cdf):
-            k += 1
-            p = (p * _lambda) / k ** nu
-            cdf += p
+    while any(u > cdf) and k < 10:
+        k += 1
+        p = (p * _lambda) / k ** nu
+        cdf += p
 
-        values[i] = k
-    return values
+    value = k
+    return value
 
 
 def series_of_com(lambda_list, nu):
     data = np.zeros(len(lambda_list))
     for i in range(len(lambda_list)):
-        data[i] = com_random(_lambda=lambda_list[i], nu=nu)[0]
+        data[i] = com_random(_lambda=lambda_list[i], nu=nu)
 
     return data
 
@@ -65,7 +61,7 @@ class CueCombination(data.Dataset):
         self.nu = nu
 
     def __len__(self):
-        return 100
+        return 500
 
     def __getitem__(self, item):
         # input signal
