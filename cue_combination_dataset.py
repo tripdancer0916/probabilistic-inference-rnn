@@ -120,7 +120,6 @@ class CueCombination(data.Dataset):
         p_soft /= 1000
 
         signal_input = np.concatenate((signal1_input, signal2_input), axis=1)
-        # signal_input = signal_input.T
         target = np.expand_dims(p_soft, axis=0)
 
         return signal_input, target
