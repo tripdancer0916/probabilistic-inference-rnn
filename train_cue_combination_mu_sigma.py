@@ -284,28 +284,9 @@ def main(config_path):
 
             hidden_list, output_list, hidden = model(inputs, hidden, cfg['DATALOADER']['TIME_LENGTH'])
 
-            musigma_loss = 0
-
-            for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
-                mu_output = 0
-                sigma_output = 0
-
-                for j in range(30, cfg['DATALOADER']['TIME_LENGTH']):
-                    mu_output += output_list[sample_id, j, 0]
-
-                mu_output /= (cfg['DATALOADER']['TIME_LENGTH'] - 30)
-
-                for j in range(30, cfg['DATALOADER']['TIME_LENGTH']):
-                    sigma_output += (output_list[sample_id, j, 0] - mu_output) ** 2
-
-                sigma_output /= (cfg['DATALOADER']['TIME_LENGTH'] - 30)
-
-                if sample_id == 0:
-                    print(mu_target_list[sample_id], sigma_target_list[sample_id])
-                    print(mu_output, sigma_output)
-
-                musigma_loss += (mu_output - mu_target_list[sample_id]) ** 2 + \
-                                (sigma_output - sigma_target_list[sample_id]) ** 2
+            mu_output = torch.mean(output_list[:, 30:, 0], dim=1)
+            sigma_output = torch.var(output_list[:, 30:, 0], dim=1)
+            musigma_loss = ((mu_output - mu_target_list) ** 2).sum() + ((sigma_output - sigma_target_list) ** 2).sum()
 
             musigma_loss.backward()
             optimizer.step()
