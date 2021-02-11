@@ -94,9 +94,15 @@ class CueCombination(data.Dataset):
                 signal2_input[t] = signal2_input_tmp
         else:
             for t in range(self.time_length):
-                signal1_input[t] = series_of_com(signal1_base, self.nu)
+                if self.nu == 1:
+                    signal1_input[t] = np.random.poisson(signal1_base)
+                else:
+                    signal1_input[t] = series_of_com(signal1_base, self.nu)
             for t in range(self.time_length):
-                signal2_input[t] = series_of_com(signal2_base, self.nu)
+                if self.nu == 1:
+                    signal2_input[t] = np.random.poisson(signal2_base)
+                else:
+                    signal2_input[t] = series_of_com(signal2_base, self.nu)
 
         # target
         sigma_1 = np.sqrt(1 / g_1) * self.uncertainty
