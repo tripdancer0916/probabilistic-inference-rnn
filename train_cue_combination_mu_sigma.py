@@ -300,9 +300,6 @@ def main(config_path):
 
                 sigma_output /= cfg['DATALOADER']['TIME_LENGTH']
 
-                if sample_id == 0:
-                    print(mu_output, sigma_output)
-
                 musigma_loss += (mu_output - mu_target_list[sample_id]) ** 2 + \
                                 (sigma_output - sigma_target_list[sample_id]) ** 2
 
