@@ -60,34 +60,44 @@ def main(config_path):
     if 'NU' not in cfg['DATALOADER']:
         cfg['DATALOADER']['NU'] = 1
 
-    model = RecurrentNeuralNetwork(n_in=2 * cfg['DATALOADER']['INPUT_NEURON'], n_out=1, n_hid=cfg['MODEL']['SIZE'],
-                                   device=device,
-                                   alpha_time_scale=cfg['MODEL']['ALPHA'],
-                                   activation=cfg['MODEL']['ACTIVATION'],
-                                   sigma_neu=cfg['MODEL']['SIGMA_NEU'],
-                                   use_bias=cfg['MODEL']['USE_BIAS'],
-                                   ffnn=cfg['MODEL']['FFNN'],
-                                   noise_first=cfg['MODEL']['NOISE_FIRST']).to(device)
+    model = RecurrentNeuralNetwork(
+        n_in=2 * cfg['DATALOADER']['INPUT_NEURON'],
+        n_out=1,
+        n_hid=cfg['MODEL']['SIZE'],
+        device=device,
+        alpha_time_scale=cfg['MODEL']['ALPHA'],
+        activation=cfg['MODEL']['ACTIVATION'],
+        sigma_neu=cfg['MODEL']['SIGMA_NEU'],
+        use_bias=cfg['MODEL']['USE_BIAS'],
+        ffnn=cfg['MODEL']['FFNN'],
+        noise_first=cfg['MODEL']['NOISE_FIRST'],
+    ).to(device)
 
-    train_dataset = CueCombination(time_length=cfg['DATALOADER']['TIME_LENGTH'],
-                                   time_scale=cfg['MODEL']['ALPHA'],
-                                   mu_min=cfg['DATALOADER']['MU_MIN'],
-                                   mu_max=cfg['DATALOADER']['MU_MAX'],
-                                   condition=cfg['DATALOADER']['CONDITION'],
-                                   input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
-                                   uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
-                                   fix_input=cfg['DATALOADER']['FIX_INPUT'],
-                                   same_mu=cfg['DATALOADER']['SAME_MU'])
+    train_dataset = CueCombination(
+        time_length=cfg['DATALOADER']['TIME_LENGTH'],
+        time_scale=cfg['MODEL']['ALPHA'],
+        mu_min=cfg['DATALOADER']['MU_MIN'],
+        mu_max=cfg['DATALOADER']['MU_MAX'],
+        condition=cfg['DATALOADER']['CONDITION'],
+        input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
+        uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
+        fix_input=cfg['DATALOADER']['FIX_INPUT'],
+        same_mu=cfg['DATALOADER']['SAME_MU'],
+        nu=cfg['DATALOADER']['NU'],
+    )
 
-    valid_dataset = CueCombination(time_length=cfg['DATALOADER']['TIME_LENGTH'],
-                                   time_scale=cfg['MODEL']['ALPHA'],
-                                   mu_min=cfg['DATALOADER']['MU_MIN'],
-                                   mu_max=cfg['DATALOADER']['MU_MAX'],
-                                   condition='all_gains',
-                                   input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
-                                   uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
-                                   fix_input=cfg['DATALOADER']['FIX_INPUT'],
-                                   same_mu=cfg['DATALOADER']['SAME_MU'])
+    valid_dataset = CueCombination(
+        time_length=cfg['DATALOADER']['TIME_LENGTH'],
+        time_scale=cfg['MODEL']['ALPHA'],
+        mu_min=cfg['DATALOADER']['MU_MIN'],
+        mu_max=cfg['DATALOADER']['MU_MAX'],
+        condition='all_gains',
+        input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
+        uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
+        fix_input=cfg['DATALOADER']['FIX_INPUT'],
+        same_mu=cfg['DATALOADER']['SAME_MU'],
+        nu=cfg['DATALOADER']['NU'],
+    )
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg['TRAIN']['BATCHSIZE'],
                                                    num_workers=2, shuffle=True,
@@ -172,7 +182,7 @@ def main(config_path):
                     p_tensor = target[sample_id, 0]
                     for j in range(40):
                         kldiv_loss += q_tensor_soft[j] * (
-                                    q_tensor_soft[j] / (p_tensor[j] + eps_tensor) + eps_tensor).log()
+                                q_tensor_soft[j] / (p_tensor[j] + eps_tensor) + eps_tensor).log()
 
             print(f'Train Epoch, {epoch}, Loss, {kldiv_loss.item():.4f}')
             # print('output mean', np.mean(output_list[:5, -5:, 0].cpu().detach().numpy(), axis=1))
