@@ -5,6 +5,8 @@ import torch.utils.data as data
 
 
 def com_random(_lambda, nu, size=None):
+    if _lambda == 0:
+        return np.array([0])
     size = size or 1
 
     nu = np.atleast_1d(nu)
@@ -63,7 +65,7 @@ class CueCombination(data.Dataset):
         self.nu = nu
 
     def __len__(self):
-        return 1000
+        return 100
 
     def __getitem__(self, item):
         # input signal
@@ -96,7 +98,6 @@ class CueCombination(data.Dataset):
                 signal2_input[t] = signal2_input_tmp
         else:
             for t in range(self.time_length):
-                print(signal1_base)
                 signal1_input[t] = series_of_com(signal1_base, self.nu)
             for t in range(self.time_length):
                 signal2_input[t] = series_of_com(signal2_base, self.nu)

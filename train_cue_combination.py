@@ -116,6 +116,7 @@ def main(config_path):
     for epoch in range(cfg['TRAIN']['NUM_EPOCH'] + 1):
         model.train()
         for i, data in enumerate(train_dataloader):
+            print(epoch, i)
             inputs, target = data
             inputs, target = inputs.float(), target.float()
             inputs, target = Variable(inputs).to(device), Variable(target).to(device)
