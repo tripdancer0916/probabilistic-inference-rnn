@@ -290,15 +290,15 @@ def main(config_path):
                 mu_output = 0
                 sigma_output = 0
 
-                for j in range(cfg['DATALOADER']['TIME_LENGTH']):
+                for j in range(30, cfg['DATALOADER']['TIME_LENGTH']):
                     mu_output += output_list[sample_id, j, 0]
 
-                mu_output /= cfg['DATALOADER']['TIME_LENGTH']
+                mu_output /= (cfg['DATALOADER']['TIME_LENGTH'] - 30)
 
-                for j in range(cfg['DATALOADER']['TIME_LENGTH']):
+                for j in range(30, cfg['DATALOADER']['TIME_LENGTH']):
                     sigma_output += (output_list[sample_id, j, 0] - mu_output) ** 2
 
-                sigma_output /= cfg['DATALOADER']['TIME_LENGTH']
+                sigma_output /= (cfg['DATALOADER']['TIME_LENGTH'] - 30)
 
                 if sample_id == 0:
                     print(mu_target_list[sample_id], sigma_target_list[sample_id])
