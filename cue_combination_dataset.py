@@ -5,7 +5,7 @@ import torch.utils.data as data
 
 
 def com_random(_lambda, nu):
-    if _lambda < 0.01:
+    if _lambda < 0.1:
         return 0
 
     nu = np.atleast_1d(nu)
