@@ -41,22 +41,24 @@ def main(config_path):
 
     eps_tensor = torch.tensor(0.00001).to(device)
 
-    if 'ALPHA' not in cfg['MODEL'].keys():
+    if 'ALPHA' not in cfg['MODEL']:
         cfg['MODEL']['ALPHA'] = 0.25
-    if 'VARIABLE_TIME_LENGTH' not in cfg['DATALOADER'].keys():
+    if 'VARIABLE_TIME_LENGTH' not in cfg['DATALOADER']:
         cfg['DATALOADER']['VARIABLE_TIME_LENGTH'] = 0
-    if 'FIXATION' not in cfg['DATALOADER'].keys():
+    if 'FIXATION' not in cfg['DATALOADER']:
         cfg['DATALOADER']['FIXATION'] = 1
-    if 'RANDOM_START' not in cfg['TRAIN'].keys():
+    if 'RANDOM_START' not in cfg['TRAIN']:
         cfg['TRAIN']['RANDOM_START'] = True
-    if 'FFNN' not in cfg['MODEL'].keys():
+    if 'FFNN' not in cfg['MODEL']:
         cfg['MODEL']['FFNN'] = False
-    if 'FIX_INPUT' not in cfg['DATALOADER'].keys():
+    if 'FIX_INPUT' not in cfg['DATALOADER']:
         cfg['DATALOADER']['FIX_INPUT'] = False
-    if 'SAME_MU' not in cfg['DATALOADER'].keys():
+    if 'SAME_MU' not in cfg['DATALOADER']:
         cfg['DATALOADER']['SAME_MU'] = True
-    if 'NOISE_FIRST' not in cfg['MODEL'].keys():
+    if 'NOISE_FIRST' not in cfg['MODEL']:
         cfg['MODEL']['NOISE_FIRST'] = False
+    if 'NU' not in cfg['DATALOADER']:
+        cfg['DATALOADER']['NU'] = 1
 
     model = RecurrentNeuralNetwork(n_in=2 * cfg['DATALOADER']['INPUT_NEURON'], n_out=1, n_hid=cfg['MODEL']['SIZE'],
                                    device=device,
@@ -71,9 +73,6 @@ def main(config_path):
                                    time_scale=cfg['MODEL']['ALPHA'],
                                    mu_min=cfg['DATALOADER']['MU_MIN'],
                                    mu_max=cfg['DATALOADER']['MU_MAX'],
-                                   mean_signal_length=cfg['DATALOADER']['MEAN_SIGNAL_LENGTH'],
-                                   variable_signal_length=cfg['DATALOADER']['VARIABLE_SIGNAL_LENGTH'],
-                                   variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
                                    condition=cfg['DATALOADER']['CONDITION'],
                                    input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
                                    uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
@@ -84,9 +83,6 @@ def main(config_path):
                                    time_scale=cfg['MODEL']['ALPHA'],
                                    mu_min=cfg['DATALOADER']['MU_MIN'],
                                    mu_max=cfg['DATALOADER']['MU_MAX'],
-                                   mean_signal_length=cfg['DATALOADER']['MEAN_SIGNAL_LENGTH'],
-                                   variable_signal_length=cfg['DATALOADER']['VARIABLE_SIGNAL_LENGTH'],
-                                   variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
                                    condition='all_gains',
                                    input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
                                    uncertainty=cfg['DATALOADER']['UNCERTAINTY'],

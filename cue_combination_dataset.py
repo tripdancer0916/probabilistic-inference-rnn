@@ -4,6 +4,39 @@ import numpy as np
 import torch.utils.data as data
 
 
+def com_random(_lambda, nu, size=None):
+    size = size or 1
+
+    nu = np.atleast_1d(nu)
+    alpha = np.atleast_1d(np.power(_lambda, 1 / nu))
+    Z = np.exp(nu * alpha) / ((2 * np.pi * alpha) ** ((nu - 1) / 2) * np.sqrt(nu))
+
+    U = np.random.uniform(low=0, high=1, size=size)
+    values = np.empty(size, dtype=int)
+
+    for i in range(U.shape[0]):
+        p = 1 / Z
+        cdf = p
+        k = 0
+        u = U[i]
+
+        while any(u > cdf):
+            k += 1
+            p = (p * _lambda) / k ** nu
+            cdf += p
+
+        values[i] = k
+    return values
+
+
+def series_of_com(lambda_list, nu):
+    data = np.zeros(len(lambda_list))
+    for i in range(len(lambda_list)):
+        data[i] = com_random(_lambda=lambda_list[i], nu=nu)[0]
+
+    return data
+
+
 class CueCombination(data.Dataset):
     def __init__(
             self,
@@ -11,27 +44,23 @@ class CueCombination(data.Dataset):
             time_scale,
             mu_min,
             mu_max,
-            mean_signal_length,
-            variable_signal_length,
-            variable_time_length,
             condition,
             input_neuron,
             uncertainty,
             fix_input=False,
             same_mu=True,
+            nu=1
     ):
         self.time_length = time_length
         self.time_scale = time_scale
         self.mu_min = mu_min
         self.mu_max = mu_max
-        self.mean_signal_length = mean_signal_length
-        self.variable_signal_length = variable_signal_length
-        self.variable_time_length = variable_time_length
         self.condition = condition
         self.input_neuron = input_neuron
         self.uncertainty = uncertainty
         self.fix_input = fix_input
         self.same_mu = same_mu
+        self.nu = nu
 
     def __len__(self):
         return 1000
@@ -50,7 +79,6 @@ class CueCombination(data.Dataset):
         else:
             signal_mu2 = np.random.rand() * (self.mu_max - self.mu_min) + self.mu_min
         if self.condition == 'all_gains':
-            # g_1, g_2 = np.random.choice([0.25, 0.5, 0.75, 1.0, 1.25], size=2)
             g_1, g_2 = np.random.rand(2) + 0.25
         else:
             g_1 = np.random.choice([0.25, 1.25], size=1)
@@ -60,19 +88,17 @@ class CueCombination(data.Dataset):
         signal1_base = g_1 * np.exp(-(signal_mu1 - phi) ** 2 / (2.0 * sigma_sq))
         signal2_base = g_2 * np.exp(-(signal_mu2 - phi) ** 2 / (2.0 * sigma_sq))
         if self.fix_input:
-            signal1_input_tmp = np.random.poisson(signal1_base)
-            # signal1_input_tmp = signal1_base
+            signal1_input_tmp = series_of_com(signal1_base, self.nu)
             for t in range(self.time_length):
                 signal1_input[t] = signal1_input_tmp
-            signal2_input_tmp = np.random.poisson(signal2_base)
-            # signal2_input_tmp = signal2_base
+            signal2_input_tmp = series_of_com(signal2_base, self.nu)
             for t in range(self.time_length):
                 signal2_input[t] = signal2_input_tmp
         else:
             for t in range(self.time_length):
-                signal1_input[t] = np.random.poisson(signal1_base)
+                signal1_input[t] = series_of_com(signal1_base, self.nu)
             for t in range(self.time_length):
-                signal2_input[t] = np.random.poisson(signal2_base)
+                signal2_input[t] = series_of_com(signal2_base, self.nu)
 
         # target
         sigma_1 = np.sqrt(1 / g_1) * self.uncertainty
@@ -92,87 +118,5 @@ class CueCombination(data.Dataset):
         signal_input = np.concatenate((signal1_input, signal2_input), axis=1)
         # signal_input = signal_input.T
         target = np.expand_dims(p_soft, axis=0)
-
-        return signal_input, target
-
-
-class CueCombinationPoint(data.Dataset):
-    def __init__(
-            self,
-            time_length,
-            time_scale,
-            mu_min,
-            mu_max,
-            mean_signal_length,
-            variable_signal_length,
-            variable_time_length,
-            condition,
-            input_neuron,
-            uncertainty,
-            fix_input=False,
-            same_mu=True,
-    ):
-        self.time_length = time_length
-        self.time_scale = time_scale
-        self.mu_min = mu_min
-        self.mu_max = mu_max
-        self.mean_signal_length = mean_signal_length
-        self.variable_signal_length = variable_signal_length
-        self.variable_time_length = variable_time_length
-        self.condition = condition
-        self.input_neuron = input_neuron
-        self.uncertainty = uncertainty
-        self.fix_input = fix_input
-        self.same_mu = same_mu
-
-    def __len__(self):
-        return 1000
-
-    def __getitem__(self, item):
-        # input signal
-        signal1_input = np.zeros((self.time_length, self.input_neuron))
-        signal2_input = np.zeros((self.time_length, self.input_neuron))
-
-        phi = np.linspace(self.mu_min, self.mu_max, self.input_neuron)
-        sigma_sq = 5
-
-        signal_mu1 = np.random.rand() * (self.mu_max - self.mu_min) + self.mu_min
-        if self.same_mu:
-            signal_mu2 = signal_mu1
-        else:
-            signal_mu2 = np.random.rand() * (self.mu_max - self.mu_min) + self.mu_min
-        if self.condition == 'all_gains':
-            # g_1, g_2 = np.random.choice([0.25, 0.5, 0.75, 1.0, 1.25], size=2)
-            g_1, g_2 = np.random.rand(2) + 0.25
-        else:
-            g_1 = np.random.choice([0.25, 1.25], size=1)
-            g_2 = g_1
-
-        # signal
-        signal1_base = g_1 * np.exp(-(signal_mu1 - phi) ** 2 / (2.0 * sigma_sq))
-        signal2_base = g_2 * np.exp(-(signal_mu2 - phi) ** 2 / (2.0 * sigma_sq))
-        if self.fix_input:
-            signal1_input_tmp = np.random.poisson(signal1_base)
-            # signal1_input_tmp = signal1_base
-            for t in range(self.time_length):
-                signal1_input[t] = signal1_input_tmp
-            signal2_input_tmp = np.random.poisson(signal2_base)
-            # signal2_input_tmp = signal2_base
-            for t in range(self.time_length):
-                signal2_input[t] = signal2_input_tmp
-        else:
-            for t in range(self.time_length):
-                signal1_input[t] = np.random.poisson(signal1_base)
-            for t in range(self.time_length):
-                signal2_input[t] = np.random.poisson(signal2_base)
-
-        # target
-        sigma_1 = np.sqrt(1 / g_1) * self.uncertainty
-        sigma_2 = np.sqrt(1 / g_2) * self.uncertainty
-        mu_posterior = ((sigma_1 ** 2) * signal_mu2 +
-                        (sigma_2 ** 2) * signal_mu1) / (sigma_1 ** 2 + sigma_2 ** 2)
-        target = np.ones(self.time_length) * mu_posterior
-        target = np.expand_dims(target, axis=1)
-        signal_input = np.concatenate((signal1_input, signal2_input), axis=1)
 
         return signal_input, target
