@@ -61,7 +61,7 @@ class CueCombination(data.Dataset):
         self.nu = nu
 
     def __len__(self):
-        return 500
+        return 1000
 
     def __getitem__(self, item):
         # input signal
