@@ -95,7 +95,7 @@ class CueCombination(data.Dataset):
 
         signal_input = np.concatenate((signal1_input, signal2_input), axis=1)
 
-        return signal_input, (mu_posterior, sigma_posterior)
+        return signal_input, mu_posterior, sigma_posterior
 
 
 class RecurrentNeuralNetwork(nn.Module):
@@ -264,14 +264,13 @@ def main(config_path):
 
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
                            lr=cfg['TRAIN']['LR'], weight_decay=cfg['TRAIN']['WEIGHT_DECAY'])
-    a_list = torch.linspace(-20, 20, 40) + 0.5
-    a_list = a_list.to(device)
     for epoch in range(cfg['TRAIN']['NUM_EPOCH'] + 1):
         model.train()
         for i, data in enumerate(train_dataloader):
-            inputs, target = data
-            inputs, target = inputs.float(), target.float()
-            inputs, target = Variable(inputs).to(device), Variable(target).to(device)
+            inputs, mu_target, sigma_target = data
+            inputs, mu_target, sigma_target = inputs.float(), mu_target.float(), sigma_target.float()
+            inputs, mu_target = Variable(inputs).to(device), Variable(mu_target).to(device)
+            sigma_target = Variable(sigma_target).to(device)
 
             if cfg['TRAIN']['RANDOM_START']:
                 hidden_np = np.random.normal(0, 0.5, size=(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
@@ -288,7 +287,6 @@ def main(config_path):
             musigma_loss = 0
 
             for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
-                mu_target, sigma_target = target[sample_id]
                 mu_output = 0
                 sigma_output = 0
 
