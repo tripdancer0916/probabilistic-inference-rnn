@@ -5,6 +5,23 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class SupraLinear(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, i):
+        ctx.save_for_backward(i)
+        result = (i ** 2).clamp(min=0.0)
+
+        return result
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        x, = ctx.saved_tensors
+        grad_input = 2*x
+        grad_input[x < 0] = 0
+
+        return grad_input * grad_output
+
+
 class RecurrentNeuralNetwork(nn.Module):
     def __init__(self, n_in, n_out, n_hid, device,
                  alpha_time_scale=0.25, jij_std=0.045,
