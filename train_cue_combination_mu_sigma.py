@@ -16,6 +16,23 @@ from torch.autograd import Variable
 from cue_combination_dataset import series_of_com
 
 
+class SupraLinear(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, i):
+        ctx.save_for_backward(i)
+        result = (i ** 2).clamp(min=0.0)
+
+        return result
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        x, = ctx.saved_tensors
+        grad_input = 2*x
+        grad_input[x < 0] = 0
+
+        return grad_input * grad_output
+
+
 class CueCombination(data.Dataset):
     def __init__(
             self,
@@ -170,7 +187,12 @@ class RecurrentNeuralNetwork(nn.Module):
                         tmp_hidden = F.relu(tmp_hidden)
                         neural_noise = self.make_neural_noise(hidden, self.alpha)
                         hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
-
+            elif self.activation == 'supra':
+                neural_noise = self.make_neural_noise(hidden, self.alpha)
+                hidden = hidden + neural_noise
+                activated = SupraLinear.apply(hidden)
+                tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(activated)
+                hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden
             elif self.activation == 'identity':
                 activated = hidden
                 tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(activated)
@@ -285,7 +307,7 @@ def main(config_path):
             hidden_list, output_list, hidden = model(inputs, hidden, cfg['DATALOADER']['TIME_LENGTH'])
 
             mu_output = torch.mean(output_list[:, 30:, 0], dim=1)
-            sigma_output = torch.var(output_list[:, 30:, 0], dim=1)
+            sigma_output = torch.std(output_list[:, 30:, 0], dim=1)
             musigma_loss = ((mu_output - mu_target_list) ** 2).sum() + ((sigma_output - sigma_target_list) ** 2).sum()
 
             musigma_loss.backward()
