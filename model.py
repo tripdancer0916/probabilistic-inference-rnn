@@ -110,6 +110,7 @@ class RecurrentNeuralNetwork(nn.Module):
                 raise ValueError
 
             output = self.w_out(hidden)
+            output = torch.clamp(output, min=-20, max=20)
             hidden_list[t] = hidden
             output_list[t] = output
 
