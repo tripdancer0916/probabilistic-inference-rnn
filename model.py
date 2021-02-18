@@ -77,7 +77,12 @@ class RecurrentNeuralNetwork(nn.Module):
                         tmp_hidden = F.relu(tmp_hidden)
                         neural_noise = self.make_neural_noise(hidden, self.alpha)
                         hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
-
+            elif self.activation == 'supra':
+                neural_noise = self.make_neural_noise(hidden, self.alpha)
+                hidden = hidden + neural_noise
+                activated = SupraLinear.apply(hidden)
+                tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(activated)
+                hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden
             elif self.activation == 'identity':
                 activated = hidden
                 tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(activated)
@@ -87,9 +92,7 @@ class RecurrentNeuralNetwork(nn.Module):
             else:
                 raise ValueError
 
-            # output = 20 * nn.Tanh()(self.w_out(hidden))
             output = self.w_out(hidden)
-            output = torch.clamp(output, min=-20, max=20)
             hidden_list[t] = hidden
             output_list[t] = output
 
