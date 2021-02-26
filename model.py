@@ -22,6 +22,27 @@ class SupraLinear(torch.autograd.Function):
         return grad_input * grad_output
 
 
+def d_tanh(x):
+    return 1 / (x.cosh() ** 2)
+
+
+class RectifiedTanh(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x):
+        ctx.save_for_backward(x)
+        result = x.tanh().clamp(min=0.0)
+
+        return result
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        x, = ctx.saved_tensors
+        grad_input = d_tanh(x)
+        grad_input[x < 0] = 0
+
+        return grad_input * grad_output
+
+
 class RecurrentNeuralNetwork(nn.Module):
     def __init__(self, n_in, n_out, n_hid, device,
                  alpha_time_scale=0.25, jij_std=0.045,
@@ -100,6 +121,11 @@ class RecurrentNeuralNetwork(nn.Module):
                 activated = SupraLinear.apply(hidden)
                 tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(activated)
                 hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden
+            elif self.activation == 'retanh':
+                tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(hidden)
+                tmp_hidden = RectifiedTanh.apply(tmp_hidden)
+                neural_noise = self.make_neural_noise(hidden, self.alpha)
+                hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
             elif self.activation == 'identity':
                 activated = hidden
                 tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(activated)
