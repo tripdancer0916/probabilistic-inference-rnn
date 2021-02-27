@@ -115,9 +115,9 @@ def main(config_path):
     a_list = a_list.to(device)
     for epoch in range(cfg['TRAIN']['NUM_EPOCH'] + 1):
         model.train()
-        print(epoch)
+        # print(epoch)
         for i, data in enumerate(train_dataloader):
-            print(i)
+            # print(i)
             inputs, target = data
             inputs, target = inputs.float(), target.float()
             inputs, target = Variable(inputs).to(device), Variable(target).to(device)
