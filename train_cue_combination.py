@@ -115,8 +115,9 @@ def main(config_path):
     a_list = a_list.to(device)
     for epoch in range(cfg['TRAIN']['NUM_EPOCH'] + 1):
         model.train()
+        print(epoch)
         for i, data in enumerate(train_dataloader):
-            # print(epoch, i)
+            print(i)
             inputs, target = data
             inputs, target = inputs.float(), target.float()
             inputs, target = Variable(inputs).to(device), Variable(target).to(device)
@@ -158,8 +159,10 @@ def main(config_path):
             optimizer.step()
 
         if epoch % cfg['TRAIN']['DISPLAY_EPOCH'] == 0:
+            # print(epoch)
             model.eval()
             for i, data in enumerate(valid_dataloader):
+                # print(i)
                 inputs, target = data
                 inputs, target = inputs.float(), target.float()
                 inputs, target = Variable(inputs).to(device), Variable(target).to(device)

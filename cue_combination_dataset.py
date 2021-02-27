@@ -11,6 +11,8 @@ def com_random(_lambda, nu):
     nu = np.atleast_1d(nu)
     alpha = np.atleast_1d(np.power(_lambda, 1 / nu))
     Z = np.exp(nu * alpha) / ((2 * np.pi * alpha) ** ((nu - 1) / 2) * np.sqrt(nu))
+    # Z[0] = max(Z[0], 1.001)
+    # print(Z)
 
     u = np.random.uniform(low=0, high=1)
 
@@ -18,12 +20,14 @@ def com_random(_lambda, nu):
     cdf = p
     k = 0
 
-    while any(u > cdf):
+    while any(u > cdf) and k < 8:
         k += 1
         p = (p * _lambda) / k ** nu
         cdf += p
+        # print(cdf, p)
 
     value = k
+    # print(value)
     return value
 
 
@@ -64,6 +68,7 @@ class CueCombination(data.Dataset):
         return 1000
 
     def __getitem__(self, item):
+        # print(item)
         # input signal
         signal1_input = np.zeros((self.time_length, self.input_neuron))
         signal2_input = np.zeros((self.time_length, self.input_neuron))
