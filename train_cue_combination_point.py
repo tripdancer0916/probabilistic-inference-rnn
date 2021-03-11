@@ -39,8 +39,6 @@ def main(config_path):
     device = torch.device('cuda' if use_cuda else 'cpu')
     print(device)
 
-    eps_tensor = torch.tensor(0.00001).to(device)
-
     if 'ALPHA' not in cfg['MODEL'].keys():
         cfg['MODEL']['ALPHA'] = 0.25
     if 'VARIABLE_TIME_LENGTH' not in cfg['DATALOADER'].keys():
@@ -67,27 +65,34 @@ def main(config_path):
                                    ffnn=cfg['MODEL']['FFNN'],
                                    noise_first=cfg['MODEL']['NOISE_FIRST']).to(device)
 
-    train_dataset = CueCombinationPoint(time_length=cfg['DATALOADER']['TIME_LENGTH'],
-                                        time_scale=cfg['MODEL']['ALPHA'],
-                                        mu_min=cfg['DATALOADER']['MU_MIN'],
-                                        mu_max=cfg['DATALOADER']['MU_MAX'],
-                                        mean_signal_length=cfg['DATALOADER']['MEAN_SIGNAL_LENGTH'],
-                                        variable_signal_length=cfg['DATALOADER']['VARIABLE_SIGNAL_LENGTH'],
-                                        variable_time_length=cfg['DATALOADER']['VARIABLE_TIME_LENGTH'],
-                                        condition=cfg['DATALOADER']['CONDITION'],
-                                        input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
-                                        uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
-                                        fix_input=cfg['DATALOADER']['FIX_INPUT'],
-                                        same_mu=cfg['DATALOADER']['SAME_MU'])
+    train_dataset = CueCombinationPoint(
+        time_length=cfg['DATALOADER']['TIME_LENGTH'],
+        time_scale=cfg['MODEL']['ALPHA'],
+        mu_min=cfg['DATALOADER']['MU_MIN'],
+        mu_max=cfg['DATALOADER']['MU_MAX'],
+        condition=cfg['DATALOADER']['CONDITION'],
+        input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
+        uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
+        fix_input=cfg['DATALOADER']['FIX_INPUT'],
+        same_mu=cfg['DATALOADER']['SAME_MU'],
+        nu=cfg['DATALOADER']['NU'],
+    )
 
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg['TRAIN']['BATCHSIZE'],
-                                                   num_workers=2, shuffle=True,
-                                                   worker_init_fn=lambda x: np.random.seed())
+    train_dataloader = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size=cfg['TRAIN']['BATCHSIZE'],
+        num_workers=2,
+        shuffle=True,
+        worker_init_fn=lambda x: np.random.seed(),
+    )
     print(model)
     # print('Epoch Loss Acc')
 
-    optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
-                           lr=cfg['TRAIN']['LR'], weight_decay=cfg['TRAIN']['WEIGHT_DECAY'])
+    optimizer = optim.Adam(
+        filter(lambda p: p.requires_grad, model.parameters()),
+        lr=cfg['TRAIN']['LR'],
+        weight_decay=cfg['TRAIN']['WEIGHT_DECAY'],
+    )
 
     for epoch in range(cfg['TRAIN']['NUM_EPOCH'] + 1):
         model.train()
@@ -107,9 +112,7 @@ def main(config_path):
             hidden = hidden.detach()
 
             hidden_list, output_list, hidden = model(inputs, hidden, cfg['DATALOADER']['TIME_LENGTH'])
-            # print(output_list.shape)
-            # print(target.shape)
-            loss = torch.nn.MSELoss()(output_list, target)
+            loss = torch.nn.MSELoss()(output_list[:, 30:, 0], target)
             loss.backward()
             optimizer.step()
 

@@ -206,7 +206,7 @@ class CueCombinationPoint(data.Dataset):
         mu_posterior = ((sigma_1 ** 2) * signal_mu2 + (sigma_2 ** 2) * signal_mu1) / (sigma_1 ** 2 + sigma_2 ** 2)
 
         signal_input = np.concatenate((signal1_input, signal2_input), axis=1)
-        target = np.array(mu_posterior)
+        target = np.array([mu_posterior]*50)
 
         return signal_input, target
 
