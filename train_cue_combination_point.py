@@ -100,6 +100,7 @@ def main(config_path):
             inputs, target = data
             inputs, target = inputs.float(), target.float()
             inputs, target = Variable(inputs).to(device), Variable(target).to(device)
+            print(inputs[0, 0])
 
             if cfg['TRAIN']['RANDOM_START']:
                 hidden_np = np.random.normal(0, 0.5, size=(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
