@@ -23,7 +23,7 @@ def make_signal_cc_task(N, time_length, mu_min, mu_max, uncertainty, fix_input=F
         mu = np.random.rand() * (mu_max - mu_min) + mu_min
         # g_1, g_2 = np.random.choice([0.25, 0.5, 0.75, 1.0, 1.25], size=2)
         g_1, g_2 = np.random.rand(2) + 0.25
-        g_2 = g_1
+        # g_2 = g_1
         signal1_base = g_1 * np.exp(-(mu - phi) ** 2 / (2.0 * sigma_sq))
         signal2_base = g_2 * np.exp(-(mu - phi) ** 2 / (2.0 * sigma_sq))
         for t in range(time_length):

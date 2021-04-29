@@ -210,6 +210,7 @@ class CueCombinationPoint(data.Dataset):
 
         return signal_input, target
 
+
 class CueCombinationConst(data.Dataset):
     def __init__(
             self,
