@@ -111,8 +111,9 @@ class CoordinateTransform(data.Dataset):
         # target
         sigma_1 = np.sqrt(1 / g_1) * self.uncertainty
         sigma_2 = np.sqrt(1 / g_2) * self.uncertainty
-        mu_posterior = 2 * ((sigma_1 ** 2) * signal_mu2 +
-                            (sigma_2 ** 2) * signal_mu1) / (sigma_1 ** 2 + sigma_2 ** 2)
+        # mu_posterior = 2 * ((sigma_1 ** 2) * signal_mu2 +
+        #                     (sigma_2 ** 2) * signal_mu1) / (sigma_1 ** 2 + sigma_2 ** 2)
+        mu_posterior = signal_mu1 + signal_mu2
         sigma_posterior = sigma_1 + sigma_2
         target_sample = np.random.normal(mu_posterior, sigma_posterior, 1000)
         a_list = np.linspace(-20, 20, 40) + 0.5
