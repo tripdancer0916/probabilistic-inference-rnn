@@ -111,7 +111,7 @@ def main(config_path):
             hidden = hidden.detach()
 
             hidden_list, output_list, hidden = model(inputs, hidden, cfg['DATALOADER']['TIME_LENGTH'])
-            loss = torch.nn.MSELoss()(torch.mean(output_list[:, 30:, 0], dim=1), target[0, 0])
+            loss = torch.nn.MSELoss()(torch.mean(output_list[:, 30:, 0], dim=1), target[:, 0])
             loss.backward()
             optimizer.step()
 
