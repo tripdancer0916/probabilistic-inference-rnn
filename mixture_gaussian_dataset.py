@@ -59,9 +59,9 @@ class MixtureGaussian(data.Dataset):
         target_sample = []
         for i in range(1000):
             if np.random.rand() < pi_1:
-                target_sample.append(np.random.normal(mu_post_1, sigma_posterior, 1))
+                target_sample.append(np.random.normal(mu_post_1, sigma_posterior))
             else:
-                target_sample.append(np.random.normal(mu_post_2, sigma_posterior, 1))
+                target_sample.append(np.random.normal(mu_post_2, sigma_posterior))
         a_list = np.linspace(-20, 20, 40) + 0.5
         p_soft = np.zeros(40)
         for i in range(1000):
