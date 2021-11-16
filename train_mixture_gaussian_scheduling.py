@@ -172,7 +172,7 @@ def main(config_path):
                                 q_tensor_soft[j] / (p_tensor[j] + eps_tensor) + eps_tensor).log()
 
             print(f'Train Epoch, {epoch}, Loss, {kldiv_loss.item():.4f}')
-            if kldiv_loss.item() < 15 and pre_sigma >= 0.4:
+            if kldiv_loss.item() < 20 and pre_sigma >= 0.4:
                 pre_sigma -= 0.1
                 print(pre_sigma)
                 train_dataset = MixtureGaussian(
