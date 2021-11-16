@@ -14,8 +14,8 @@ class MixtureGaussian(data.Dataset):
             input_neuron,
             uncertainty,
             pre_sigma,
-            pre_mu_1=-2,
-            pre_mu_2=2,
+            pre_mu_1=-1,
+            pre_mu_2=1,
     ):
         self.time_length = time_length
         self.time_scale = time_scale
@@ -65,7 +65,7 @@ class MixtureGaussian(data.Dataset):
         a_list = np.linspace(-2, 2, 40) + 0.05
         p_soft = np.zeros(40)
         for i in range(1000):
-            p_soft += -np.tanh(2 * ((target_sample[i] - a_list) ** 2 - 0.025)) / 2 + 0.05
+            p_soft += -np.tanh(2 * ((target_sample[i] - a_list) ** 2 - 0.025)) / 2 + 0.5
 
         p_soft /= 1000
 
