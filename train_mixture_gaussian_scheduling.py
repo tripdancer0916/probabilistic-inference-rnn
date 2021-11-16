@@ -107,7 +107,7 @@ def main(config_path):
         filter(lambda p: p.requires_grad, model.parameters()),
         lr=cfg['TRAIN']['LR'], weight_decay=cfg['TRAIN']['WEIGHT_DECAY'],
     )
-    a_list = torch.linspace(-20, 20, 40) + 0.5
+    a_list = torch.linspace(-2, 2, 40) + 0.05
     a_list = a_list.to(device)
     for epoch in range(cfg['TRAIN']['NUM_EPOCH'] + 1):
         model.train()
@@ -132,9 +132,10 @@ def main(config_path):
 
             for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
                 q_tensor_soft = torch.zeros(40).to(device)
-                for j in range(cfg['DATALOADER']['TIME_LENGTH']):
-                    q_tensor_soft += - torch.nn.Tanh()(2 * ((output_list[sample_id, j] - a_list) ** 2 - 0.25)) / 2 + 0.5
-                q_tensor_soft /= cfg['DATALOADER']['TIME_LENGTH']
+                for j in range(30, cfg['DATALOADER']['TIME_LENGTH']):
+                    q_tensor_soft += - torch.nn.Tanh()(
+                        2 * ((output_list[sample_id, j] - a_list) ** 2 - 0.025)) / 2 + 0.05
+                q_tensor_soft /= (cfg['DATALOADER']['TIME_LENGTH'] - 30)
                 p_tensor = target[sample_id, 0]
                 for j in range(40):
                     kldiv_loss += q_tensor_soft[j] * (q_tensor_soft[j] / (p_tensor[j] + eps_tensor) + eps_tensor).log()
@@ -163,7 +164,7 @@ def main(config_path):
                     q_tensor_soft = torch.zeros(40).to(device)
                     for j in range(30, cfg['DATALOADER']['TIME_LENGTH']):
                         q_tensor_soft += - torch.nn.Tanh()(
-                            2 * ((output_list[sample_id, j] - a_list) ** 2 - 0.25)) / 2 + 0.5
+                            2 * ((output_list[sample_id, j] - a_list) ** 2 - 0.025)) / 2 + 0.05
                     q_tensor_soft /= (cfg['DATALOADER']['TIME_LENGTH'] - 30)
                     p_tensor = target[sample_id, 0]
                     for j in range(40):
