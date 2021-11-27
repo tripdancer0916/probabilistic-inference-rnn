@@ -18,6 +18,33 @@ from mixture_gaussian_dataset import MixtureGaussian
 from model import RecurrentNeuralNetwork
 
 
+def autocorrelation(data, k):
+    """Returns the autocorrelation of the *k*th lag in a time series data.
+
+    Parameters
+    ----------
+    data : one dimensional numpy array
+    k : the *k*th lag in the time series data (indexing starts at 0)
+    """
+
+    # yの平均
+    y_avg = torch.mean(data)
+
+    # 分子の計算
+    sum_of_covariance = 0
+    for i in range(k + 1, len(data)):
+        covariance = (data[i] - y_avg) * (data[i - (k + 1)] - y_avg)
+        sum_of_covariance += covariance
+
+    # 分母の計算
+    sum_of_denominator = 0
+    for u in range(len(data)):
+        denominator = (data[u] - y_avg) ** 2
+        sum_of_denominator += denominator
+
+    return sum_of_covariance / sum_of_denominator
+
+
 def main(config_path):
     # hyper-parameter
     with open(config_path, 'r') as f:
@@ -129,7 +156,6 @@ def main(config_path):
             hidden_list, output_list, hidden = model(inputs, hidden, cfg['DATALOADER']['TIME_LENGTH'])
 
             kldiv_loss = 0
-
             for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
                 q_tensor_soft = torch.zeros(40).to(device)
                 for j in range(30, cfg['DATALOADER']['TIME_LENGTH']):
@@ -140,7 +166,14 @@ def main(config_path):
                 for j in range(40):
                     kldiv_loss += q_tensor_soft[j] * (q_tensor_soft[j] / (p_tensor[j] + eps_tensor) + eps_tensor).log()
 
-            kldiv_loss.backward()
+            autocorr_loss = 0
+            for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
+                for k in range(cfg['DATALOADER']['TIME_LENGTH'] - 30):
+                    # print(torch.abs(autocorrelation(output_list[sample_id, 30:], k)))
+                    autocorr_loss += torch.abs(autocorrelation(output_list[sample_id, 30:], k))
+
+            loss = kldiv_loss + autocorr_loss
+            loss.backward()
             optimizer.step()
 
         if epoch % cfg['TRAIN']['DISPLAY_EPOCH'] == 0:
@@ -170,8 +203,12 @@ def main(config_path):
                     for j in range(40):
                         kldiv_loss += q_tensor_soft[j] * (
                                 q_tensor_soft[j] / (p_tensor[j] + eps_tensor) + eps_tensor).log()
+                autocorr_loss = 0
+                for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
+                    for k in range(cfg['DATALOADER']['TIME_LENGTH'] - 30):
+                        autocorr_loss += torch.abs(autocorrelation(output_list[sample_id, 30], k))
 
-            print(f'Train Epoch, {epoch}, Loss, {kldiv_loss.item():.4f}')
+            print(f'Train Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
             if kldiv_loss.item() < 20 and pre_sigma >= 0.4:
                 pre_sigma -= 0.1
                 print(pre_sigma)
