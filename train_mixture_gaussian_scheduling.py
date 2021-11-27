@@ -81,6 +81,8 @@ def main(config_path):
         cfg['DATALOADER']['FIX_INPUT'] = False
     if 'NOISE_FIRST' not in cfg['MODEL']:
         cfg['MODEL']['NOISE_FIRST'] = False
+    if 'AUTOCORRLOSS_COEF' not in cfg['TRAIN']:
+        cfg['TRAIN']['AUTOCORRLOSS_COEF'] = 0.2
 
     pre_sigma = cfg['DATALOADER']['PRE_SIGMA']
 
@@ -157,17 +159,6 @@ def main(config_path):
             hidden_list, output_list, hidden = model(inputs, hidden, cfg['DATALOADER']['TIME_LENGTH'])
 
             kldiv_loss = 0
-            """
-            for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
-                q_tensor_soft = torch.zeros(40).to(device)
-                for j in range(30, cfg['DATALOADER']['TIME_LENGTH']):
-                    q_tensor_soft += - torch.nn.Tanh()(
-                        20 * ((output_list[sample_id, j] - a_list) ** 2 - 0.025)) / 2 + 0.5
-                q_tensor_soft /= (cfg['DATALOADER']['TIME_LENGTH'] - 30)
-                p_tensor = target[sample_id, 0]
-                for j in range(40):
-                    kldiv_loss += q_tensor_soft[j] * (q_tensor_soft[j] / (p_tensor[j] + eps_tensor) + eps_tensor).log()
-            """
             q_tensor_soft = torch.zeros((cfg['TRAIN']['BATCHSIZE'], 40)).to(device)
             for j in range(30, cfg['DATALOADER']['TIME_LENGTH']):
                 q_tensor_soft += - torch.nn.Tanh()(20 * ((output_list[:, j] - a_list) ** 2 - 0.025)) / 2 + 0.5
@@ -182,10 +173,9 @@ def main(config_path):
                 # print(torch.abs(autocorrelation(output_list[:, 30:], k)))
                 autocorr_loss += torch.abs(torch.sum(autocorrelation(output_list[:, 30:], k, device)))
 
-            loss = kldiv_loss + 0.5 * autocorr_loss
+            loss = kldiv_loss + cfg['TRAIN']['AUTOCORRLOSS_COEF'] * autocorr_loss
             loss.backward()
             optimizer.step()
-            # print(f'{i}, Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
 
         if epoch % cfg['TRAIN']['DISPLAY_EPOCH'] == 0:
             model.eval()
@@ -216,7 +206,6 @@ def main(config_path):
                                 q_tensor_soft[j] / (p_tensor[j] + eps_tensor) + eps_tensor).log()
                 autocorr_loss = 0
                 for k in range(cfg['DATALOADER']['TIME_LENGTH'] - 30):
-                    # print(torch.abs(autocorrelation(output_list[:, 30:], k, device)))
                     autocorr_loss += torch.abs(torch.sum(autocorrelation(output_list[:, 30:], k, device)))
                 break
 
