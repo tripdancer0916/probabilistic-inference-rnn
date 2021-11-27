@@ -218,6 +218,7 @@ def main(config_path):
                 for k in range(cfg['DATALOADER']['TIME_LENGTH'] - 30):
                     # print(torch.abs(autocorrelation(output_list[:, 30:], k, device)))
                     autocorr_loss += torch.abs(torch.sum(autocorrelation(output_list[:, 30:], k, device)))
+                break
 
             print(f'Train Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
             if kldiv_loss.item() < 20 and pre_sigma >= 0.4:
