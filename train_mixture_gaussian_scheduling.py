@@ -31,14 +31,14 @@ def autocorrelation(data, k, device):
     y_avg = torch.mean(data, dim=1).to(device)
 
     # 分子の計算
-    sum_of_covariance = torch.zeros(y_avg.shape[0])
+    sum_of_covariance = torch.zeros(y_avg.shape[0]).to(device)
     for i in range(k + 1, data.shape[1]):
         covariance = (data[:, i] - y_avg) * (data[:, i - (k + 1)] - y_avg)
         # print(covariance)
         sum_of_covariance += covariance[:, 0]
 
     # 分母の計算
-    sum_of_denominator = torch.zeros(y_avg.shape[0])
+    sum_of_denominator = torch.zeros(y_avg.shape[0]).to(device)
     for u in range(data.shape[1]):
         denominator = (data[:, u] - y_avg) ** 2
         sum_of_denominator += denominator[:, 0]
