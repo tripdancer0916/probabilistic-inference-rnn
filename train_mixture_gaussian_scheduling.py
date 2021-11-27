@@ -185,7 +185,7 @@ def main(config_path):
             loss = kldiv_loss + 0.5 * autocorr_loss
             loss.backward()
             optimizer.step()
-            print(f'{i}, Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
+            # print(f'{i}, Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
 
         if epoch % cfg['TRAIN']['DISPLAY_EPOCH'] == 0:
             model.eval()
