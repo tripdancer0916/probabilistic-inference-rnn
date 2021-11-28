@@ -215,7 +215,7 @@ def main(config_path):
 
             print(f'Train Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
             if kldiv_loss.item() < 20 and pre_sigma > cfg['DATALOADER']['END_PRE_SIGMA']:
-                pre_sigma -= 0.1
+                pre_sigma -= 0.05
                 print(pre_sigma)
                 train_dataset = MixtureGaussian(
                     time_length=cfg['DATALOADER']['TIME_LENGTH'],
