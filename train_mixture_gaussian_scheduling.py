@@ -88,7 +88,7 @@ def main(config_path):
     if 'AUTOCORRLOSS_COEF' not in cfg['TRAIN']:
         cfg['TRAIN']['AUTOCORRLOSS_COEF'] = 0.2
 
-    pre_sigma = cfg['DATALOADER']['PRE_SIGMA']
+    pre_sigma = cfg['DATALOADER']['START_PRE_SIGMA']
 
     model = RecurrentNeuralNetwork(
         n_in=cfg['DATALOADER']['INPUT_NEURON'],
