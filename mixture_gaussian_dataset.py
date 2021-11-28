@@ -28,7 +28,7 @@ class MixtureGaussian(data.Dataset):
         self.pre_mu_2 = pre_mu_2
 
     def __len__(self):
-        return 1000
+        return 200
 
     def __getitem__(self, item):
         # print(item)
