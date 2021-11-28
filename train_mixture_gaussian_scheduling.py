@@ -71,6 +71,10 @@ def main(config_path):
         cfg['MODEL']['ALPHA'] = 0.25
     if 'VARIABLE_TIME_LENGTH' not in cfg['DATALOADER']:
         cfg['DATALOADER']['VARIABLE_TIME_LENGTH'] = 0
+    if 'START_PRE_SIGMA' not in cfg['DATALOADER']:
+        cfg['DATALOADER']['START_PRE_SIGMA'] = 0.6
+    if 'END_PRE_SIGMA' not in cfg['DATALOADER']:
+        cfg['DATALOADER']['END_PRE_SIGMA'] = 0.3
     if 'FIXATION' not in cfg['DATALOADER']:
         cfg['DATALOADER']['FIXATION'] = 1
     if 'RANDOM_START' not in cfg['TRAIN']:
@@ -210,7 +214,7 @@ def main(config_path):
                 break
 
             print(f'Train Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
-            if kldiv_loss.item() < 20 and pre_sigma >= 0.4:
+            if kldiv_loss.item() < 20 and pre_sigma > cfg['DATALOADER']['END_PRE_SIGMA']:
                 pre_sigma -= 0.1
                 print(pre_sigma)
                 train_dataset = MixtureGaussian(
