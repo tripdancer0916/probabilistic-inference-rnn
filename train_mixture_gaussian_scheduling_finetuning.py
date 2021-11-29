@@ -87,6 +87,8 @@ def main(config_path, model_dir, num_epoch):
         cfg['MODEL']['NOISE_FIRST'] = False
     if 'AUTOCORRLOSS_COEF' not in cfg['TRAIN']:
         cfg['TRAIN']['AUTOCORRLOSS_COEF'] = 0.2
+    if 'G_SCALE' not in cfg['DATALOADER']:
+        cfg['DATALOADER']['G_SCALE'] = 1
 
     pre_sigma = cfg['DATALOADER']['START_PRE_SIGMA']
 
@@ -114,6 +116,7 @@ def main(config_path, model_dir, num_epoch):
         input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
         uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
         pre_sigma=pre_sigma,
+        g_scale=cfg['DATALOADER']['G_SCALE'],
     )
 
     valid_dataset = MixtureGaussian(
@@ -124,6 +127,7 @@ def main(config_path, model_dir, num_epoch):
         input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
         uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
         pre_sigma=pre_sigma,
+        g_scale=cfg['DATALOADER']['G_SCALE'],
     )
 
     train_dataloader = torch.utils.data.DataLoader(

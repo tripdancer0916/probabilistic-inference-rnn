@@ -16,6 +16,7 @@ class MixtureGaussian(data.Dataset):
             pre_sigma,
             pre_mu_1=-1,
             pre_mu_2=1,
+            g_scale=1,
     ):
         self.time_length = time_length
         self.time_scale = time_scale
@@ -26,6 +27,7 @@ class MixtureGaussian(data.Dataset):
         self.pre_sigma = pre_sigma
         self.pre_mu_1 = pre_mu_1
         self.pre_mu_2 = pre_mu_2
+        self.g_scale = g_scale
 
     def __len__(self):
         return 200
@@ -39,6 +41,7 @@ class MixtureGaussian(data.Dataset):
 
         signal_mu = np.random.rand() * (self.mu_max - self.mu_min) + self.mu_min
         g = np.random.rand() + 0.25
+        g *= self.g_scale
 
         # signal
         signal_base = g * np.exp(-(signal_mu - phi) ** 2 / (2.0 * sigma_sq))
