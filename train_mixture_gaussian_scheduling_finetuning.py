@@ -46,7 +46,7 @@ def autocorrelation(data, k, device):
     return sum_of_covariance / sum_of_denominator
 
 
-def main(config_path):
+def main(config_path, model_dir, num_epoch):
     # hyper-parameter
     with open(config_path, 'r') as f:
         cfg = yaml.safe_load(f)
@@ -103,7 +103,7 @@ def main(config_path):
         noise_first=cfg['MODEL']['NOISE_FIRST'],
     ).to(device)
 
-    model_path = f'trained_model/mixture_gaussian_scheduling/20211127_3/epoch_200.pth'
+    model_path = f'trained_model/mixture_gaussian_scheduling/{model_dir}/epoch_{num_epoch}.pth'
     model.load_state_dict(torch.load(model_path, map_location=device))
 
     train_dataset = MixtureGaussian(
@@ -218,7 +218,7 @@ def main(config_path):
 
             print(f'Train Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
             if kldiv_loss.item() < 30 and pre_sigma > cfg['DATALOADER']['END_PRE_SIGMA']:
-                pre_sigma -= 0.02
+                pre_sigma -= 0.01
                 print(pre_sigma)
                 train_dataset = MixtureGaussian(
                     time_length=cfg['DATALOADER']['TIME_LENGTH'],
@@ -258,6 +258,8 @@ def main(config_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN training')
     parser.add_argument('config_path', type=str)
+    parser.add_argument('--model_dir')
+    parser.add_argument('--num_epoch')
     args = parser.parse_args()
     print(args)
-    main(args.config_path)
+    main(args.config_path, args.model_dir, args.num_epoch)
