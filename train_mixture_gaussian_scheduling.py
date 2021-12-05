@@ -87,6 +87,8 @@ def main(config_path):
         cfg['MODEL']['NOISE_FIRST'] = False
     if 'AUTOCORRLOSS_COEF' not in cfg['TRAIN']:
         cfg['TRAIN']['AUTOCORRLOSS_COEF'] = 0.2
+    if 'G_SCALE' not in cfg['DATALOADER']:
+        cfg['DATALOADER']['G_SCALE'] = 1
 
     pre_sigma = cfg['DATALOADER']['START_PRE_SIGMA']
 
@@ -111,6 +113,8 @@ def main(config_path):
         input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
         uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
         pre_sigma=pre_sigma,
+        g_scale=cfg['DATALOADER']['G_SCALE'],
+        fix=cfg['DATALOADER']['FIX'],
     )
 
     valid_dataset = MixtureGaussian(
@@ -121,6 +125,8 @@ def main(config_path):
         input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
         uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
         pre_sigma=pre_sigma,
+        g_scale=cfg['DATALOADER']['G_SCALE'],
+        fix=cfg['DATALOADER']['FIX'],
     )
 
     train_dataloader = torch.utils.data.DataLoader(
@@ -214,8 +220,8 @@ def main(config_path):
                 break
 
             print(f'Train Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
-            if kldiv_loss.item() < 20 and pre_sigma > cfg['DATALOADER']['END_PRE_SIGMA']:
-                pre_sigma -= 0.05
+            if kldiv_loss.item() < 90 and pre_sigma > cfg['DATALOADER']['END_PRE_SIGMA']:
+                pre_sigma -= 0.01
                 print(pre_sigma)
                 train_dataset = MixtureGaussian(
                     time_length=cfg['DATALOADER']['TIME_LENGTH'],
@@ -225,6 +231,7 @@ def main(config_path):
                     input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
                     uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
                     pre_sigma=pre_sigma,
+                    fix=cfg['DATALOADER']['FIX'],
                 )
 
                 valid_dataset = MixtureGaussian(
@@ -235,6 +242,7 @@ def main(config_path):
                     input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
                     uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
                     pre_sigma=pre_sigma,
+                    fix=cfg['DATALOADER']['FIX'],
                 )
 
                 train_dataloader = torch.utils.data.DataLoader(

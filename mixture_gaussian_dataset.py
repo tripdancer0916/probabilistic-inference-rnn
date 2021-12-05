@@ -17,6 +17,7 @@ class MixtureGaussian(data.Dataset):
             pre_mu_1=-1,
             pre_mu_2=1,
             g_scale=1,
+            fix=False,
     ):
         self.time_length = time_length
         self.time_scale = time_scale
@@ -28,6 +29,7 @@ class MixtureGaussian(data.Dataset):
         self.pre_mu_1 = pre_mu_1
         self.pre_mu_2 = pre_mu_2
         self.g_scale = g_scale
+        self.fix = fix
 
     def __len__(self):
         return 200
@@ -45,8 +47,12 @@ class MixtureGaussian(data.Dataset):
 
         # signal
         signal_base = g * np.exp(-(signal_mu - phi) ** 2 / (2.0 * sigma_sq))
-        for t in range(self.time_length):
-            signal_input[t] = np.random.poisson(signal_base)
+        if self.fix:
+            for t in range(self.time_length):
+                signal_input[t] = signal_base
+        else:
+            for t in range(self.time_length):
+                signal_input[t] = np.random.poisson(signal_base)
 
         # target
         sigma = np.sqrt(1 / g) * self.uncertainty
@@ -56,7 +62,7 @@ class MixtureGaussian(data.Dataset):
                      (self.pre_sigma ** 2) * signal_mu) / (sigma ** 2 + self.pre_sigma ** 2)
         sigma_posterior = sigma * self.pre_sigma / np.sqrt(sigma ** 2 + self.pre_sigma ** 2)
         normalize_factor = np.exp(-(signal_mu - self.pre_mu_1) ** 2 / (2 * (self.pre_sigma ** 2 + sigma ** 2))) + \
-            np.exp(-(signal_mu - self.pre_mu_2) ** 2 / (2 * (self.pre_sigma ** 2 + sigma ** 2)))
+                           np.exp(-(signal_mu - self.pre_mu_2) ** 2 / (2 * (self.pre_sigma ** 2 + sigma ** 2)))
         pi_1 = np.exp(-(signal_mu - self.pre_mu_1) ** 2 / (2 * (self.pre_sigma ** 2 + sigma ** 2))) / normalize_factor
         # pi_2 = np.exp(-(signal_mu - self.pre_mu_2) ** 2 / (2 * (self.pre_sigma ** 2 + sigma ** 2))) / normalize_factor
         target_sample = []

@@ -33,6 +33,7 @@ def make_signal_cc_task(N, time_length, mu_min, mu_max, uncertainty=10, pre_sigm
         else:
             mu = specified_mu
         g = np.random.rand() + 0.25
+        g *= 0.25
         signal_base = g * np.exp(-(mu - phi) ** 2 / (2.0 * sigma_sq))
         for t in range(time_length):
             signal_input[t] = np.random.poisson(signal_base)
@@ -67,7 +68,7 @@ def make_signal_cc_task(N, time_length, mu_min, mu_max, uncertainty=10, pre_sigm
     return input_signals, target_list
 
 
-config_path = '../cfg/mixture_gaussian/20211127_2.cfg'
+config_path = '../cfg/mixture_gaussian/20211130_1.cfg'
 with open(config_path, 'r') as f:
     cfg = yaml.safe_load(f)
 
@@ -84,12 +85,12 @@ if 'ALPHA' not in cfg['MODEL'].keys():
 model = RecurrentNeuralNetwork(n_in=100, n_out=1, n_hid=cfg['MODEL']['SIZE'], device=device,
                                alpha_time_scale=cfg['MODEL']['ALPHA'],
                                activation=cfg['MODEL']['ACTIVATION'],
-                               # sigma_neu=cfg['MODEL']['SIGMA_NEU'],
-                               sigma_neu=0.05,
+                               sigma_neu=cfg['MODEL']['SIGMA_NEU'],
+                               # sigma_neu=0.05,
                                use_bias=cfg['MODEL']['USE_BIAS'],
                                ffnn=False).to(device)
 
-model_path = f'../trained_model/mixture_gaussian_scheduling/{model_name}/epoch_380.pth'
+model_path = f'../trained_model/mixture_gaussian_scheduling/{model_name}/epoch_110.pth'
 model.load_state_dict(torch.load(model_path, map_location=device))
 model.eval()
 
