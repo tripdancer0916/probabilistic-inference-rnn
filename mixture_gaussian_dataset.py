@@ -43,10 +43,10 @@ class MixtureGaussian(data.Dataset):
 
         signal_mu = np.random.rand() * (self.mu_max - self.mu_min) + self.mu_min
         g = np.random.rand() + 0.25
-        # g *= self.g_scale
+        g *= self.g_scale
 
         # signal
-        signal_base = g * self.g_scale * np.exp(-(signal_mu - phi) ** 2 / (2.0 * sigma_sq))
+        signal_base = g * np.exp(-(signal_mu - phi) ** 2 / (2.0 * sigma_sq))
         if self.fix:
             for t in range(self.time_length):
                 signal_input[t] = signal_base
