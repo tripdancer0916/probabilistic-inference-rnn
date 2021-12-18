@@ -222,7 +222,7 @@ def main(config_path):
                 break
 
             print(f'Train Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
-            print(output_list[0, 30:, 0])
+            # print(output_list[0, 30:, 0])
             if kldiv_loss.item() < cfg['TRAIN']['LOSS_CHANGE_TRIGGER'] and pre_sigma > cfg['DATALOADER']['END_PRE_SIGMA']:
                 pre_sigma -= 0.01
                 print(pre_sigma)
