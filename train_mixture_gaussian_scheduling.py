@@ -89,6 +89,8 @@ def main(config_path):
         cfg['TRAIN']['AUTOCORRLOSS_COEF'] = 0.2
     if 'G_SCALE' not in cfg['DATALOADER']:
         cfg['DATALOADER']['G_SCALE'] = 1
+    if 'LOSS_CHANGE_TRIGGER' not in cfg['TRAIN']:
+        cfg['TRAIN']['LOSS_CHANGE_TRIGGER'] = 60
 
     pre_sigma = cfg['DATALOADER']['START_PRE_SIGMA']
 
@@ -220,7 +222,7 @@ def main(config_path):
                 break
 
             print(f'Train Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
-            if kldiv_loss.item() < 60 and pre_sigma > cfg['DATALOADER']['END_PRE_SIGMA']:
+            if kldiv_loss.item() < cfg['TRAIN']['LOSS_CHANGE_TRIGGER'] and pre_sigma > cfg['DATALOADER']['END_PRE_SIGMA']:
                 pre_sigma -= 0.01
                 print(pre_sigma)
                 train_dataset = MixtureGaussian(
