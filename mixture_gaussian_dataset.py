@@ -18,6 +18,7 @@ class MixtureGaussian(data.Dataset):
             pre_mu_2=1,
             g_scale=1,
             fix=False,
+            beta=95,
     ):
         self.time_length = time_length
         self.time_scale = time_scale
@@ -30,6 +31,7 @@ class MixtureGaussian(data.Dataset):
         self.pre_mu_2 = pre_mu_2
         self.g_scale = g_scale
         self.fix = fix
+        self.beta = beta
 
     def __len__(self):
         return 200
@@ -74,7 +76,7 @@ class MixtureGaussian(data.Dataset):
         a_list = np.linspace(-2, 2, 40) + 0.05
         p_soft = np.zeros(40)
         for i in range(1000):
-            p_soft += -np.tanh(50 * ((target_sample[i] - a_list) ** 2 - 0.05**2)) / 2 + 0.5
+            p_soft += -np.tanh(self.beta * ((target_sample[i] - a_list) ** 2 - 0.05**2)) / 2 + 0.5
 
         p_soft /= 1000
 

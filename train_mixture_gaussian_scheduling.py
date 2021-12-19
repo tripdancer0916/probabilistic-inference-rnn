@@ -91,6 +91,8 @@ def main(config_path):
         cfg['DATALOADER']['G_SCALE'] = 1
     if 'LOSS_CHANGE_TRIGGER' not in cfg['TRAIN']:
         cfg['TRAIN']['LOSS_CHANGE_TRIGGER'] = 60
+    if 'BETA' not in cfg['DATALOADER']:
+        cfg['DATALOADER']['BETA'] = 95
 
     pre_sigma = cfg['DATALOADER']['START_PRE_SIGMA']
 
@@ -117,6 +119,7 @@ def main(config_path):
         pre_sigma=pre_sigma,
         g_scale=cfg['DATALOADER']['G_SCALE'],
         fix=cfg['DATALOADER']['FIX'],
+        beta=cfg['DATALOADER']['BETA'],
     )
 
     valid_dataset = MixtureGaussian(
@@ -129,6 +132,7 @@ def main(config_path):
         pre_sigma=pre_sigma,
         g_scale=cfg['DATALOADER']['G_SCALE'],
         fix=cfg['DATALOADER']['FIX'],
+        beta=cfg['DATALOADER']['BETA'],
     )
 
     train_dataloader = torch.utils.data.DataLoader(
@@ -173,7 +177,9 @@ def main(config_path):
             kldiv_loss = 0
             q_tensor_soft = torch.zeros((cfg['TRAIN']['BATCHSIZE'], 40)).to(device)
             for j in range(30, cfg['DATALOADER']['TIME_LENGTH']):
-                q_tensor_soft += - torch.nn.Tanh()(50 * ((output_list[:, j] - a_list) ** 2 - 0.05**2)) / 2 + 0.5
+                q_tensor_soft += - torch.nn.Tanh()(
+                    cfg['DATALOADER']['BETA'] * ((output_list[:, j] - a_list) ** 2 - 0.05**2),
+                ) / 2 + 0.5
             q_tensor_soft /= (cfg['DATALOADER']['TIME_LENGTH'] - 30)
             p_tensor = target[:, 0]
             for j in range(40):
@@ -210,7 +216,7 @@ def main(config_path):
                     q_tensor_soft = torch.zeros(40).to(device)
                     for j in range(30, cfg['DATALOADER']['TIME_LENGTH']):
                         q_tensor_soft += - torch.nn.Tanh()(
-                            50 * ((output_list[sample_id, j] - a_list) ** 2 - 0.05**2)) / 2 + 0.5
+                            cfg['DATALOADER']['BETA'] * ((output_list[sample_id, j] - a_list) ** 2 - 0.05**2)) / 2 + 0.5
                     q_tensor_soft /= (cfg['DATALOADER']['TIME_LENGTH'] - 30)
                     p_tensor = target[sample_id, 0]
                     for j in range(40):
@@ -235,6 +241,7 @@ def main(config_path):
                     uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
                     pre_sigma=pre_sigma,
                     fix=cfg['DATALOADER']['FIX'],
+                    beta=cfg['DATALOADER']['BETA'],
                 )
 
                 valid_dataset = MixtureGaussian(
@@ -246,6 +253,7 @@ def main(config_path):
                     uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
                     pre_sigma=pre_sigma,
                     fix=cfg['DATALOADER']['FIX'],
+                    beta=cfg['DATALOADER']['BETA'],
                 )
 
                 train_dataloader = torch.utils.data.DataLoader(
