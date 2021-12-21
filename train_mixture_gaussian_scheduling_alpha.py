@@ -235,7 +235,7 @@ def main(config_path, model_dir, num_epoch):
 
             print(f'Train Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
             if kldiv_loss.item() < cfg['TRAIN']['LOSS_CHANGE_TRIGGER'] and alpha > 0.1:
-                alpha = alpha - 0.1
+                alpha = alpha - 0.02
                 print(f'alpha: {alpha}')
                 model.alpha = torch.ones(model.n_hid) * alpha
                 model.alpha = model.alpha.to(model.device)
