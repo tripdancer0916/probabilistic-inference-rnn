@@ -237,18 +237,9 @@ def main(config_path, model_dir, num_epoch):
             if kldiv_loss.item() < cfg['TRAIN']['LOSS_CHANGE_TRIGGER'] and alpha > 0.1:
                 alpha = alpha - 0.1
                 print(f'alpha: {alpha}')
-                model = RecurrentNeuralNetwork(
-                    n_in=cfg['DATALOADER']['INPUT_NEURON'],
-                    n_out=1,
-                    n_hid=cfg['MODEL']['SIZE'],
-                    device=device,
-                    alpha_time_scale=alpha,
-                    activation=cfg['MODEL']['ACTIVATION'],
-                    sigma_neu=cfg['MODEL']['SIGMA_NEU'],
-                    use_bias=cfg['MODEL']['USE_BIAS'],
-                    ffnn=cfg['MODEL']['FFNN'],
-                    noise_first=cfg['MODEL']['NOISE_FIRST'],
-                ).to(device)
+                model.alpha = torch.ones(model.n_hid) * alpha
+                model.alpha = model.alpha.to(model.device)
+
                 train_dataset = MixtureGaussianAlpha(
                     time_length=cfg['DATALOADER']['TIME_LENGTH'],
                     time_scale=cfg['MODEL']['ALPHA'],
@@ -260,7 +251,7 @@ def main(config_path, model_dir, num_epoch):
                     g_scale=cfg['DATALOADER']['G_SCALE'],
                     fix=cfg['DATALOADER']['FIX'],
                     beta=cfg['DATALOADER']['BETA'],
-                    alpha=cfg['MODEL']['ALPHA'],
+                    alpha=alpha,
                 )
 
                 valid_dataset = MixtureGaussianAlpha(
@@ -274,7 +265,7 @@ def main(config_path, model_dir, num_epoch):
                     g_scale=cfg['DATALOADER']['G_SCALE'],
                     fix=cfg['DATALOADER']['FIX'],
                     beta=cfg['DATALOADER']['BETA'],
-                    alpha=cfg['MODEL']['ALPHA'],
+                    alpha=alpha,
                 )
 
                 train_dataloader = torch.utils.data.DataLoader(
