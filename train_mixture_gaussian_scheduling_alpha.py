@@ -115,7 +115,6 @@ def main(config_path, model_dir, num_epoch):
 
     train_dataset = MixtureGaussianAlpha(
         time_length=cfg['DATALOADER']['TIME_LENGTH'],
-        time_scale=cfg['MODEL']['ALPHA'],
         mu_min=cfg['DATALOADER']['MU_MIN'],
         mu_max=cfg['DATALOADER']['MU_MAX'],
         input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
@@ -129,7 +128,6 @@ def main(config_path, model_dir, num_epoch):
 
     valid_dataset = MixtureGaussianAlpha(
         time_length=cfg['DATALOADER']['TIME_LENGTH'],
-        time_scale=cfg['MODEL']['ALPHA'],
         mu_min=cfg['DATALOADER']['MU_MIN'],
         mu_max=cfg['DATALOADER']['MU_MAX'],
         input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
@@ -234,7 +232,7 @@ def main(config_path, model_dir, num_epoch):
                 break
 
             print(f'Train Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
-            if kldiv_loss.item() < cfg['TRAIN']['LOSS_CHANGE_TRIGGER'] and alpha > 0.1:
+            if kldiv_loss.item() < cfg['TRAIN']['LOSS_CHANGE_TRIGGER'] and alpha > 0.2:
                 alpha = alpha - 0.02
                 print(f'alpha: {alpha}')
                 model.alpha = torch.ones(model.n_hid) * alpha
@@ -242,7 +240,6 @@ def main(config_path, model_dir, num_epoch):
 
                 train_dataset = MixtureGaussianAlpha(
                     time_length=cfg['DATALOADER']['TIME_LENGTH'],
-                    time_scale=cfg['MODEL']['ALPHA'],
                     mu_min=cfg['DATALOADER']['MU_MIN'],
                     mu_max=cfg['DATALOADER']['MU_MAX'],
                     input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
@@ -256,7 +253,6 @@ def main(config_path, model_dir, num_epoch):
 
                 valid_dataset = MixtureGaussianAlpha(
                     time_length=cfg['DATALOADER']['TIME_LENGTH'],
-                    time_scale=cfg['MODEL']['ALPHA'],
                     mu_min=cfg['DATALOADER']['MU_MIN'],
                     mu_max=cfg['DATALOADER']['MU_MAX'],
                     input_neuron=cfg['DATALOADER']['INPUT_NEURON'],

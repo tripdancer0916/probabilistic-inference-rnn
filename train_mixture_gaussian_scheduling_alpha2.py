@@ -14,7 +14,7 @@ sys.path.append('../')
 
 from torch.autograd import Variable
 
-from mixture_gaussian_dataset import MixtureGaussianAlpha2
+from mixture_gaussian_dataset import MixtureGaussian
 from model import RecurrentNeuralNetwork
 
 
@@ -113,9 +113,8 @@ def main(config_path, model_dir, num_epoch):
     model_path = f'trained_model/mixture_gaussian_scheduling/{model_dir}/epoch_{num_epoch}.pth'
     model.load_state_dict(torch.load(model_path, map_location=device))
 
-    train_dataset = MixtureGaussianAlpha2(
+    train_dataset = MixtureGaussian(
         time_length=cfg['DATALOADER']['TIME_LENGTH'],
-        time_scale=cfg['MODEL']['ALPHA'],
         mu_min=cfg['DATALOADER']['MU_MIN'],
         mu_max=cfg['DATALOADER']['MU_MAX'],
         input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
@@ -124,12 +123,10 @@ def main(config_path, model_dir, num_epoch):
         g_scale=cfg['DATALOADER']['G_SCALE'],
         fix=cfg['DATALOADER']['FIX'],
         beta=cfg['DATALOADER']['BETA'],
-        alpha=cfg['MODEL']['ALPHA'],
     )
 
-    valid_dataset = MixtureGaussianAlpha2(
+    valid_dataset = MixtureGaussian(
         time_length=cfg['DATALOADER']['TIME_LENGTH'],
-        time_scale=cfg['MODEL']['ALPHA'],
         mu_min=cfg['DATALOADER']['MU_MIN'],
         mu_max=cfg['DATALOADER']['MU_MAX'],
         input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
@@ -138,7 +135,6 @@ def main(config_path, model_dir, num_epoch):
         g_scale=cfg['DATALOADER']['G_SCALE'],
         fix=cfg['DATALOADER']['FIX'],
         beta=cfg['DATALOADER']['BETA'],
-        alpha=cfg['MODEL']['ALPHA'],
     )
 
     train_dataloader = torch.utils.data.DataLoader(
@@ -234,50 +230,11 @@ def main(config_path, model_dir, num_epoch):
                 break
 
             print(f'Train Epoch, {epoch}, KLDivLoss, {kldiv_loss.item():.3f}, AutoCorrLoss, {autocorr_loss.item():.3f}')
-            if kldiv_loss.item() < cfg['TRAIN']['LOSS_CHANGE_TRIGGER'] and alpha > 0.1:
+            if kldiv_loss.item() < cfg['TRAIN']['LOSS_CHANGE_TRIGGER'] and alpha > 0.2:
                 alpha = alpha - 0.02
                 print(f'alpha: {alpha}')
                 model.alpha = torch.ones(model.n_hid) * alpha
                 model.alpha = model.alpha.to(model.device)
-
-                train_dataset = MixtureGaussianAlpha2(
-                    time_length=cfg['DATALOADER']['TIME_LENGTH'],
-                    time_scale=cfg['MODEL']['ALPHA'],
-                    mu_min=cfg['DATALOADER']['MU_MIN'],
-                    mu_max=cfg['DATALOADER']['MU_MAX'],
-                    input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
-                    uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
-                    pre_sigma=pre_sigma,
-                    g_scale=cfg['DATALOADER']['G_SCALE'],
-                    fix=cfg['DATALOADER']['FIX'],
-                    beta=cfg['DATALOADER']['BETA'],
-                    alpha=alpha,
-                )
-
-                valid_dataset = MixtureGaussianAlpha2(
-                    time_length=cfg['DATALOADER']['TIME_LENGTH'],
-                    time_scale=cfg['MODEL']['ALPHA'],
-                    mu_min=cfg['DATALOADER']['MU_MIN'],
-                    mu_max=cfg['DATALOADER']['MU_MAX'],
-                    input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
-                    uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
-                    pre_sigma=pre_sigma,
-                    g_scale=cfg['DATALOADER']['G_SCALE'],
-                    fix=cfg['DATALOADER']['FIX'],
-                    beta=cfg['DATALOADER']['BETA'],
-                    alpha=alpha,
-                )
-
-                train_dataloader = torch.utils.data.DataLoader(
-                    train_dataset, batch_size=cfg['TRAIN']['BATCHSIZE'],
-                    num_workers=2, shuffle=True,
-                    worker_init_fn=lambda x: np.random.seed(),
-                )
-                valid_dataloader = torch.utils.data.DataLoader(
-                    valid_dataset, batch_size=cfg['TRAIN']['BATCHSIZE'],
-                    num_workers=2, shuffle=True,
-                    worker_init_fn=lambda x: np.random.seed(),
-                )
 
         if epoch > 0 and epoch % cfg['TRAIN']['NUM_SAVE_EPOCH'] == 0:
             torch.save(model.state_dict(), os.path.join(save_path, f'epoch_{epoch}.pth'))

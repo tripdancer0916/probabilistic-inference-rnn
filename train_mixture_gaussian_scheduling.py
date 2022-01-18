@@ -111,7 +111,6 @@ def main(config_path):
 
     train_dataset = MixtureGaussian(
         time_length=cfg['DATALOADER']['TIME_LENGTH'],
-        time_scale=cfg['MODEL']['ALPHA'],
         mu_min=cfg['DATALOADER']['MU_MIN'],
         mu_max=cfg['DATALOADER']['MU_MAX'],
         input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
@@ -124,7 +123,6 @@ def main(config_path):
 
     valid_dataset = MixtureGaussian(
         time_length=cfg['DATALOADER']['TIME_LENGTH'],
-        time_scale=cfg['MODEL']['ALPHA'],
         mu_min=cfg['DATALOADER']['MU_MIN'],
         mu_max=cfg['DATALOADER']['MU_MAX'],
         input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
@@ -234,7 +232,6 @@ def main(config_path):
                 print(pre_sigma)
                 train_dataset = MixtureGaussian(
                     time_length=cfg['DATALOADER']['TIME_LENGTH'],
-                    time_scale=cfg['MODEL']['ALPHA'],
                     mu_min=cfg['DATALOADER']['MU_MIN'],
                     mu_max=cfg['DATALOADER']['MU_MAX'],
                     input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
@@ -246,7 +243,6 @@ def main(config_path):
 
                 valid_dataset = MixtureGaussian(
                     time_length=cfg['DATALOADER']['TIME_LENGTH'],
-                    time_scale=cfg['MODEL']['ALPHA'],
                     mu_min=cfg['DATALOADER']['MU_MIN'],
                     mu_max=cfg['DATALOADER']['MU_MAX'],
                     input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
