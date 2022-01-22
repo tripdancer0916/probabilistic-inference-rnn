@@ -232,7 +232,7 @@ def main(config_path):
                 alpha -= 0.01
                 model.alpha = torch.ones(model.n_hid) * alpha
                 model.alpha = model.alpha.to(model.device)
-                print(f'pre_sigma: {pre_sigma:.3f}, alpha: {alpha.3f}')
+                print(f'pre_sigma: {pre_sigma:.3f}, alpha: {alpha:.3f}')
                 train_dataset = MixtureGaussian(
                     time_length=cfg['DATALOADER']['TIME_LENGTH'],
                     mu_min=cfg['DATALOADER']['MU_MIN'],
