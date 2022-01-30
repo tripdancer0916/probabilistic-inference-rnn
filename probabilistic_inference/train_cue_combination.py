@@ -110,7 +110,7 @@ def train(config_path):
             hidden_list, output_list, hidden = model(inputs, hidden, cfg['DATALOADER']['TIME_LENGTH'])
 
             kldiv_loss = 0
-            q_tensor_soft = torch.zeros(40).to(device)
+            q_tensor_soft = torch.zeros((cfg['TRAIN']['BATCHSIZE'], 40)).to(device)
             for j in range(cfg['DATALOADER']['TIME_LENGTH']):
                 proxy = cfg['DATALOADER']['BETA'] * ((output_list[:, j] - a_list) ** 2 - 0.05**2)
                 q_tensor_soft += - torch.nn.Tanh()(proxy) / 2 + 0.5
@@ -140,16 +140,16 @@ def train(config_path):
                 hidden_list, output_list, hidden = model(inputs, hidden, cfg['DATALOADER']['TIME_LENGTH'])
 
                 kldiv_loss = 0
-                for sample_id in range(cfg['TRAIN']['BATCHSIZE']):
-                    q_tensor_soft = torch.zeros(40).to(device)
-                    for j in range(cfg['DATALOADER']['TIME_LENGTH']):
-                        proxy = cfg['DATALOADER']['BETA'] * ((output_list[sample_id, j] - a_list) ** 2 - 0.05 ** 2)
-                        q_tensor_soft += - torch.nn.Tanh()(proxy) / 2 + 0.5
-                    q_tensor_soft /= (cfg['DATALOADER']['TIME_LENGTH'])
-                    p_tensor = target[sample_id, 0]
-                    for j in range(40):
-                        proxy = q_tensor_soft[j] / (p_tensor[j] + eps_tensor) + eps_tensor
-                        kldiv_loss += q_tensor_soft[j] * proxy.log()
+                q_tensor_soft = torch.zeros((cfg['TRAIN']['BATCHSIZE'], 40)).to(device)
+                for j in range(cfg['DATALOADER']['TIME_LENGTH']):
+                    proxy = cfg['DATALOADER']['BETA'] * ((output_list[:, j] - a_list) ** 2 - 0.05 ** 2)
+                    q_tensor_soft += - torch.nn.Tanh()(proxy) / 2 + 0.5
+                q_tensor_soft /= (cfg['DATALOADER']['TIME_LENGTH'])
+                p_tensor = target[:, 0]
+                for j in range(40):
+                    _kldiv = q_tensor_soft[:, j] * (
+                                q_tensor_soft[:, j] / (p_tensor[:, j] + eps_tensor) + eps_tensor).log()
+                    kldiv_loss += torch.sum(_kldiv)
 
             print(f'Train Epoch, {epoch}, Loss, {kldiv_loss.item():.4f}')
 
