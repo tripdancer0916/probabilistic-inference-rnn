@@ -10,8 +10,8 @@ import torch.optim as optim
 import yaml
 from torch.autograd import Variable
 
-from probabilistic_inference.dataset.coordinate_transformation import CoordinateTransform
-from probabilistic_inference.model import RNN
+from dataset.coordinate_transformation import CoordinateTransform
+from model import RNN
 
 
 def train(config_path):

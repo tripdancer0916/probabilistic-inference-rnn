@@ -10,8 +10,8 @@ import torch.optim as optim
 import yaml
 from torch.autograd import Variable
 
-from probabilistic_inference.dataset.cue_combination import CueCombination
-from probabilistic_inference.model import RNN
+from dataset.cue_combination import CueCombination
+from model import RNN
 
 
 def train(config_path):
