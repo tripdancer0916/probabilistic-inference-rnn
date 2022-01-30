@@ -7,7 +7,7 @@ DATALOADER:
   UNCERTAINTY: 1
   SAME_MU: False
   FIX_INPUT: False
-  BETA: 95
+  BETA: 2
 MACHINE:
   CUDA: true
   SEED: 1
