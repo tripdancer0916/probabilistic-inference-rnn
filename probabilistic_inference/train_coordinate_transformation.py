@@ -57,6 +57,7 @@ def train(config_path):
         uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
         fix_input=cfg['DATALOADER']['FIX_INPUT'],
         same_mu=cfg['DATALOADER']['SAME_MU'],
+        beta=cfg['DATALOADER']['BETA'],
     )
 
     valid_dataset = CoordinateTransform(
@@ -69,6 +70,7 @@ def train(config_path):
         uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
         fix_input=cfg['DATALOADER']['FIX_INPUT'],
         same_mu=cfg['DATALOADER']['SAME_MU'],
+        beta=cfg['DATALOADER']['BETA'],
     )
 
     train_dataloader = torch.utils.data.DataLoader(
