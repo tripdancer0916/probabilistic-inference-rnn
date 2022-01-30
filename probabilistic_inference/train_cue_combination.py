@@ -88,7 +88,7 @@ def train(config_path):
         filter(lambda p: p.requires_grad, model.parameters()),
         lr=cfg['TRAIN']['LR'], weight_decay=cfg['TRAIN']['WEIGHT_DECAY'],
     )
-    a_list = torch.linspace(-20, 20, 40) + 0.05
+    a_list = torch.linspace(-20, 20, 40) + 0.5
     a_list = a_list.to(device)
     for epoch in range(cfg['TRAIN']['NUM_EPOCH'] + 1):
         model.train()
@@ -112,7 +112,7 @@ def train(config_path):
             kldiv_loss = 0
             q_tensor_soft = torch.zeros((cfg['TRAIN']['BATCHSIZE'], 40)).to(device)
             for j in range(cfg['DATALOADER']['TIME_LENGTH']):
-                proxy = cfg['DATALOADER']['BETA'] * ((output_list[:, j] - a_list) ** 2 - 0.05**2)
+                proxy = cfg['DATALOADER']['BETA'] * ((output_list[:, j] - a_list) ** 2 - 0.5**2)
                 q_tensor_soft += - torch.nn.Tanh()(proxy) / 2 + 0.5
             q_tensor_soft /= (cfg['DATALOADER']['TIME_LENGTH'])
             p_tensor = target[:, 0]
@@ -142,7 +142,7 @@ def train(config_path):
                 kldiv_loss = 0
                 q_tensor_soft = torch.zeros((cfg['TRAIN']['BATCHSIZE'], 40)).to(device)
                 for j in range(cfg['DATALOADER']['TIME_LENGTH']):
-                    proxy = cfg['DATALOADER']['BETA'] * ((output_list[:, j] - a_list) ** 2 - 0.05 ** 2)
+                    proxy = cfg['DATALOADER']['BETA'] * ((output_list[:, j] - a_list) ** 2 - 0.5 ** 2)
                     q_tensor_soft += - torch.nn.Tanh()(proxy) / 2 + 0.5
                 q_tensor_soft /= (cfg['DATALOADER']['TIME_LENGTH'])
                 p_tensor = target[:, 0]
