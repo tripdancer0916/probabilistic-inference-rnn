@@ -1,57 +1,19 @@
-"""define recurrent neural networks"""
+"""Define recurrent neural network"""
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
-class SupraLinear(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, i):
-        ctx.save_for_backward(i)
-        result = (i ** 2).clamp(min=0.0)
-
-        return result
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        x, = ctx.saved_tensors
-        grad_input = 2*x
-        grad_input[x < 0] = 0
-
-        return grad_input * grad_output
-
-
-def d_tanh(x):
-    return 1 / (x.cosh() ** 2)
-
-
-class RectifiedTanh(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, x):
-        ctx.save_for_backward(x)
-        result = x.tanh().clamp(min=0.0)
-
-        return result
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        x, = ctx.saved_tensors
-        grad_input = d_tanh(x)
-        grad_input[x < 0] = 0
-
-        return grad_input * grad_output
-
-
-class RecurrentNeuralNetwork(nn.Module):
-    def __init__(self, n_in, n_out, n_hid, device,
-                 alpha_time_scale=0.25, jij_std=0.045,
-                 activation='tanh',
-                 sigma_neu=0.05,
-                 use_bias=True,
-                 ffnn=False,
-                 noise_first=False):
-        super(RecurrentNeuralNetwork, self).__init__()
+class RNN(nn.Module):
+    def __init__(
+            self, n_in, n_out, n_hid, device,
+            alpha_time_scale=0.25, jij_std=0.045,
+            activation='tanh',
+            sigma_neu=0.05,
+            use_bias=True,
+            ffnn=False,
+    ):
+        super(RNN, self).__init__()
         self.n_in = n_in
         self.n_hid = n_hid
         self.n_out = n_out
@@ -65,7 +27,6 @@ class RecurrentNeuralNetwork(nn.Module):
 
         self.device = device
         self.ffnn = ffnn
-        self.noise_first = noise_first
 
         self.alpha = torch.ones(self.n_hid) * alpha_time_scale
         self.alpha = self.alpha.to(self.device)
@@ -86,52 +47,23 @@ class RecurrentNeuralNetwork(nn.Module):
 
         for t in range(length):
             if self.activation == 'tanh':
-                if self.noise_first:
-                    neural_noise = self.make_neural_noise(hidden, self.alpha)
-                    hidden = hidden + neural_noise
-                    activated = torch.tanh(hidden)
-                    tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(activated)
-                    hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden
+                if self.ffnn:
+                    tmp_hidden = self.w_in(input_signal[t])
+                    hidden = torch.tanh(tmp_hidden)
                 else:
                     activated = torch.tanh(hidden)
                     tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(activated)
                     neural_noise = self.make_neural_noise(hidden, self.alpha)
                     hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
-
             elif self.activation == 'relu':
                 if self.ffnn:
                     tmp_hidden = self.w_in(input_signal[t])
-                    hidden = F.relu(tmp_hidden)
+                    hidden = torch.nn.functional.relu(tmp_hidden)
                 else:
-                    if self.noise_first:
-                        neural_noise = self.make_neural_noise(hidden, self.alpha)
-                        hidden = hidden + neural_noise
-                        tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(hidden)
-                        tmp_hidden = F.relu(tmp_hidden)
-                        hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden
-                    else:
-                        # tmp_hidden = F.relu(self.w_in(input_signal[t])) + F.relu(self.w_hh(hidden))
-                        tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(hidden)
-                        tmp_hidden = F.relu(tmp_hidden)
-                        neural_noise = self.make_neural_noise(hidden, self.alpha)
-                        hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
-            elif self.activation == 'supra':
-                neural_noise = self.make_neural_noise(hidden, self.alpha)
-                hidden = hidden + neural_noise
-                activated = SupraLinear.apply(hidden)
-                tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(activated)
-                hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden
-            elif self.activation == 'retanh':
-                tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(hidden)
-                tmp_hidden = RectifiedTanh.apply(tmp_hidden)
-                neural_noise = self.make_neural_noise(hidden, self.alpha)
-                hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
-            elif self.activation == 'identity':
-                activated = hidden
-                tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(activated)
-                neural_noise = self.make_neural_noise(hidden, self.alpha)
-                hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
-
+                    tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(hidden)
+                    tmp_hidden = torch.nn.functional.relu(tmp_hidden)
+                    neural_noise = self.make_neural_noise(hidden, self.alpha)
+                    hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
             else:
                 raise ValueError
 
