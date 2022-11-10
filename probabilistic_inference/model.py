@@ -89,14 +89,14 @@ class RNNEI(RNN):
         use_bias=True,
         ffnn=False,
     ):
-        super(RNN, self).__init__(
+        super().__init__(
             n_in, n_out, n_hid, device,
             alpha_time_scale, jij_std,
             activation, sigma_neu,
             use_bias, ffnn,
         )
         self.w_hh.weight.data = torch.rand(n_hid, n_hid) / n_hid
-        self.e_i_neuron = torch.eye(n_hid) * torch.from_numpy(np.array([1 if i < 180 else -1 for i in range(256)])).float()
+        self.e_i_neuron = torch.eye(n_hid) * torch.from_numpy(np.array([1 if i < 240 else -1 for i in range(300)])).float()
         self.e_i_neuron = self.e_i_neuron.to(device)
 
     def forward(self, input_signal, hidden, length):
