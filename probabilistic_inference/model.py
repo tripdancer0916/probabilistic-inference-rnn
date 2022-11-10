@@ -122,7 +122,7 @@ class RNNEI(RNN):
                     tmp_hidden = self.w_in(input_signal[t])
                     hidden = torch.nn.functional.relu(tmp_hidden)
                 else:
-                    tmp_hidden = self.w_in(input_signal[t]) + F.linear(activated, w_rec)
+                    tmp_hidden = self.w_in(input_signal[t]) + F.linear(hidden, w_rec)
                     tmp_hidden = torch.nn.functional.relu(tmp_hidden)
                     neural_noise = self.make_neural_noise(hidden, self.alpha)
                     hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
